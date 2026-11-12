@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>城门 · 3D 贴图破碎</title>
+<title>城门 · 一块网格掏空</title>
 <style>
   html, body { margin: 0; height: 100%; background: #141311; color: #f4efe6; font: 15px/1.45 "Microsoft YaHei", "Noto Sans SC", sans-serif; overflow: hidden; }
   canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-  #note { position: fixed; left: 12px; top: 12px; max-width: min(440px, calc(100% - 24px)); background: rgba(20,19,17,.84); border-radius: 14px; padding: 12px 14px; pointer-events: none; }
+  #note { position: fixed; left: 12px; top: 12px; max-width: min(460px, calc(100% - 24px)); background: rgba(20,19,17,.84); border-radius: 14px; padding: 12px 14px; pointer-events: none; }
   h1 { font-size: 18px; margin: 0 0 4px; }
   p { margin: 0; color: #e4d8c8; }
   #stat { margin-top: 6px; }
@@ -17,8 +17,8 @@
 </head>
 <body>
 <div id="note">
-  <h1>城门这一块 · 3D</h1>
-  <p>从城镇里抽出南城门，不改原来的场景。砖缝和颗粒是贴图。点墙面，从那一格播出一种固定破碎，最多 16 块碎片。</p>
+  <h1>城门这一块 · 掏空</h1>
+  <p>不动原来的城镇。城门平时是几块整网格，表面按积木比例留缝和凸点。点中后这块网格被挖穿，碎块是同样的积木，弹出后落到地上就停。</p>
   <div id="stat"></div>
 </div>
 <div id="hud"><button type="button" id="reset">复原</button></div>
@@ -27,8 +27,9 @@
 (function () {
   "use strict";
   if (!window.THREE) { document.body.textContent = "缺少 three.js。"; return; }
-  var NAMES = ["垂直塌落", "放射炸开", "向右滑落", "上抛再落"];
+  var NAMES = ["垂直掏穿", "中心炸开", "横向掏穿", "向上崩"];
   var SEED = 20261112;
+  var BW = 0.48, BH = 0.4, BD = 0.48, STUD_H = 0.11, STUD_R = 0.15;
   var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -36,13 +37,13 @@
   var scene = new THREE.Scene();
   scene.background = new THREE.Color(0x141311);
   var camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 80);
-  scene.add(new THREE.HemisphereLight(0xfff4e6, 0x2a2c30, 0.85));
-  var sun = new THREE.DirectionalLight(0xffffff, 1.25);
-  sun.position.set(8, 14, 6);
+  scene.add(new THREE.HemisphereLight(0xfff4e6, 0x2a2c30, 0.9));
+  var sun = new THREE.DirectionalLight(0xffffff, 1.2);
+  sun.position.set(7, 12, 6);
   scene.add(sun);
 
   function hash(a, b, c) {
-    var h = (SEED ^ (a * 374761393) ^ (b * 668265263) ^ (c * 1442695041)) >>> 0;
+    var h = (SEED ^ Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263) ^ Math.imul(c | 0, 1442695041)) >>> 0;
     h = Math.imul(h ^ (h >>> 16), 2246822519);
     h = Math.imul(h ^ (h >>> 13), 3266489917);
     return (h ^ (h >>> 16)) >>> 0;
@@ -56,188 +57,283 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
-  function brickTexture(top) {
+  function plasticTexture() {
     var c = document.createElement("canvas");
-    c.width = 256; c.height = 256;
+    c.width = 128; c.height = 128;
     var g = c.getContext("2d");
-    g.fillStyle = "#1a1816";
-    g.fillRect(0, 0, 256, 256);
-    var cols = 4, rows = 8, bw = 256 / cols, bh = 256 / rows, r, i, off, shade;
-    for (r = 0; r < rows; r++) {
-      off = (r % 2) * (bw / 2);
-      for (i = -1; i < cols + 1; i++) {
-        shade = ((r * 3 + i * 5) % 5) * 6;
-        g.fillStyle = top ? "rgb(" + (196 - shade) + "," + (168 - shade) + ",118)" : "rgb(" + (176 - shade) + "," + (58 - shade / 3) + "," + (48) + ")";
-        g.fillRect(i * bw + off + 2, r * bh + 2, bw - 4, bh - 4);
-        g.fillStyle = "rgba(0,0,0,.35)";
-        g.fillRect(i * bw + off + 2, r * bh + bh - 4, bw - 4, 2);
-        if (top) {
-          g.fillStyle = "#f0d7ad";
-          g.beginPath();
-          g.ellipse(i * bw + off + bw / 2, r * bh + bh / 2, bw * 0.22, bh * 0.28, 0, 0, Math.PI * 2);
-          g.fill();
-        }
-      }
-    }
+    g.fillStyle = "#c44732";
+    g.fillRect(0, 0, 128, 128);
+    g.strokeStyle = "rgba(40,12,8,.55)";
+    g.lineWidth = 4;
+    g.strokeRect(2, 2, 124, 124);
+    g.fillStyle = "#e7b56a";
+    g.beginPath();
+    g.ellipse(64, 42, 28, 22, 0, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = "rgba(255,255,255,.2)";
+    g.beginPath();
+    g.ellipse(54, 34, 10, 7, 0, 0, Math.PI * 2);
+    g.fill();
     var tex = new THREE.CanvasTexture(c);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 4;
+    if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
     return tex;
   }
-  var sideTex = brickTexture(false);
-  var topTex = brickTexture(true);
-  function mats(w, h, d) {
-    var side = new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.48, metalness: 0 });
-    var top = new THREE.MeshStandardMaterial({ map: topTex, roughness: 0.42, metalness: 0 });
-    var bottom = new THREE.MeshStandardMaterial({ color: 0x3a332c, roughness: 0.8 });
-    side.map = sideTex.clone();
-    side.map.wrapS = side.map.wrapT = THREE.RepeatWrapping;
-    side.map.repeat.set(Math.max(w, d) / 1.1, h / 0.72);
-    top.map = topTex.clone();
-    top.map.wrapS = top.map.wrapT = THREE.RepeatWrapping;
-    top.map.repeat.set(w / 0.55, d / 0.55);
-    return [side, side, top, bottom, side, side];
-  }
-  function box(w, h, d, x, y, z) {
-    var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mats(w, h, d));
-    m.position.set(x, y, z);
-    m.userData.solid = true;
-    return m;
-  }
+  var pieceMat = new THREE.MeshStandardMaterial({ map: plasticTexture(), roughness: 0.42, metalness: 0, side: THREE.DoubleSide });
+  var wallMat = new THREE.MeshStandardMaterial({ color: 0xc44732, roughness: 0.4, metalness: 0, side: THREE.DoubleSide });
 
-  /* 南城门：宽 8、深 4.4、高 7.2，门洞宽 4.6、通行高约 4.46。只这一块。 */
-  var gate = new THREE.Group();
-  var pierW = 1.7, depth = 4.4, height = 7.2, opening = 4.6, passage = 4.46;
-  gate.add(box(pierW, height, depth, -opening / 2 - pierW / 2, height / 2, 0));
-  gate.add(box(pierW, height, depth, opening / 2 + pierW / 2, height / 2, 0));
-  gate.add(box(opening, height - passage, depth, 0, passage + (height - passage) / 2, 0));
-  gate.add(box(8.6, 0.7, 5.2, 0, height + 0.28, 0));
-  scene.add(gate);
-  var ground = new THREE.Mesh(new THREE.BoxGeometry(16, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0x2c3328, roughness: 0.9 }));
+  function emptyBuf() { return { p: [], n: [] }; }
+  function tri(buf, a, b, c) {
+    var ux = b.x - a.x, uy = b.y - a.y, uz = b.z - a.z;
+    var vx = c.x - a.x, vy = c.y - a.y, vz = c.z - a.z;
+    var nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    var len = Math.hypot(nx, ny, nz) || 1;
+    nx /= len; ny /= len; nz /= len;
+    [a, b, c].forEach(function (q) { buf.p.push(q.x, q.y, q.z); buf.n.push(nx, ny, nz); });
+  }
+  function quad(buf, a, b, c, d) { tri(buf, a, b, c); tri(buf, a, c, d); }
+  function addStud(buf, x, y, z) {
+    var seg = 8, i, a0, a1, x0, z0, x1, z1;
+    for (i = 0; i < seg; i++) {
+      a0 = (i / seg) * Math.PI * 2; a1 = ((i + 1) / seg) * Math.PI * 2;
+      x0 = Math.cos(a0) * STUD_R; z0 = Math.sin(a0) * STUD_R;
+      x1 = Math.cos(a1) * STUD_R; z1 = Math.sin(a1) * STUD_R;
+      tri(buf, { x: x + x0, y: y, z: z + z0 }, { x: x + x0, y: y + STUD_H, z: z + z0 }, { x: x + x1, y: y + STUD_H, z: z + z1 });
+      tri(buf, { x: x + x0, y: y, z: z + z0 }, { x: x + x1, y: y + STUD_H, z: z + z1 }, { x: x + x1, y: y, z: z + z1 });
+      tri(buf, { x: x, y: y + STUD_H, z: z }, { x: x + x0, y: y + STUD_H, z: z + z0 }, { x: x + x1, y: y + STUD_H, z: z + z1 });
+    }
+  }
+  function geoFrom(buf) {
+    var g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(buf.p, 3));
+    g.setAttribute("normal", new THREE.Float32BufferAttribute(buf.n, 3));
+    return g;
+  }
+  function makePart(ox, oy, oz, nx, ny, nz) {
+    var solid = new Uint8Array(nx * ny * nz);
+    solid.fill(1);
+    return { ox: ox, oy: oy, oz: oz, nx: nx, ny: ny, nz: nz, solid: solid, mesh: null };
+  }
+  function at(part, i, j, k) { return i + part.nx * (j + part.ny * k); }
+  function has(part, i, j, k) {
+    if (i < 0 || j < 0 || k < 0 || i >= part.nx || j >= part.ny || k >= part.nz) return false;
+    return part.solid[at(part, i, j, k)] === 1;
+  }
+  function rebuild(part) {
+    var buf = emptyBuf();
+    var i, j, k, x0, y0, z0, x1, y1, z1;
+    for (k = 0; k < part.nz; k++) for (j = 0; j < part.ny; j++) for (i = 0; i < part.nx; i++) {
+      if (!has(part, i, j, k)) continue;
+      x0 = part.ox + i * BW; x1 = x0 + BW;
+      y0 = part.oy + j * BH; y1 = y0 + BH;
+      z0 = part.oz + k * BD; z1 = z0 + BD;
+      if (!has(part, i + 1, j, k)) quad(buf, { x: x1, y: y0, z: z1 }, { x: x1, y: y1, z: z1 }, { x: x1, y: y1, z: z0 }, { x: x1, y: y0, z: z0 });
+      if (!has(part, i - 1, j, k)) quad(buf, { x: x0, y: y0, z: z0 }, { x: x0, y: y1, z: z0 }, { x: x0, y: y1, z: z1 }, { x: x0, y: y0, z: z1 });
+      if (!has(part, i, j + 1, k)) {
+        quad(buf, { x: x0, y: y1, z: z1 }, { x: x1, y: y1, z: z1 }, { x: x1, y: y1, z: z0 }, { x: x0, y: y1, z: z0 });
+        addStud(buf, (x0 + x1) / 2, y1, (z0 + z1) / 2);
+      }
+      if (!has(part, i, j - 1, k)) quad(buf, { x: x0, y: y0, z: z0 }, { x: x1, y: y0, z: z0 }, { x: x1, y: y0, z: z1 }, { x: x0, y: y0, z: z1 });
+      if (!has(part, i, j, k + 1)) quad(buf, { x: x0, y: y0, z: z1 }, { x: x1, y: y0, z: z1 }, { x: x1, y: y1, z: z1 }, { x: x0, y: y1, z: z1 });
+      if (!has(part, i, j, k - 1)) quad(buf, { x: x1, y: y0, z: z0 }, { x: x0, y: y0, z: z0 }, { x: x0, y: y1, z: z0 }, { x: x1, y: y1, z: z0 });
+    }
+    var g = geoFrom(buf);
+    if (part.mesh) { part.mesh.geometry.dispose(); part.mesh.geometry = g; }
+    else {
+      part.mesh = new THREE.Mesh(g, wallMat);
+      part.mesh.userData.part = part;
+      scene.add(part.mesh);
+    }
+  }
+  var parts = [];
+  function addPart(ox, oy, oz, nx, ny, nz) {
+    var part = makePart(ox, oy, oz, nx, ny, nz);
+    rebuild(part);
+    parts.push(part);
+  }
+  addPart(-4.05, 0, -1.2, 4, 16, 5);
+  addPart(2.13, 0, -1.2, 4, 16, 5);
+  addPart(-4.05, 6.4, -1.2, 17, 4, 5);
+  addPart(-4.3, 8.0, -1.45, 18, 1, 6);
+  var ground = new THREE.Mesh(new THREE.BoxGeometry(18, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0x2c3328, roughness: 0.92 }));
   ground.position.y = -0.1;
   scene.add(ground);
 
-  var yaw = 0.7, pitch = 0.42, dist = 16, drag = null;
+  var chipGeo = (function () {
+    var buf = emptyBuf();
+    quad(buf, { x: 0.22, y: -0.2, z: 0.22 }, { x: 0.22, y: 0.2, z: 0.22 }, { x: 0.22, y: 0.2, z: -0.22 }, { x: 0.22, y: -0.2, z: -0.22 });
+    quad(buf, { x: -0.22, y: -0.2, z: -0.22 }, { x: -0.22, y: 0.2, z: -0.22 }, { x: -0.22, y: 0.2, z: 0.22 }, { x: -0.22, y: -0.2, z: 0.22 });
+    quad(buf, { x: -0.22, y: 0.2, z: 0.22 }, { x: 0.22, y: 0.2, z: 0.22 }, { x: 0.22, y: 0.2, z: -0.22 }, { x: -0.22, y: 0.2, z: -0.22 });
+    quad(buf, { x: -0.22, y: -0.2, z: -0.22 }, { x: 0.22, y: -0.2, z: -0.22 }, { x: 0.22, y: -0.2, z: 0.22 }, { x: -0.22, y: -0.2, z: 0.22 });
+    quad(buf, { x: -0.22, y: -0.2, z: 0.22 }, { x: 0.22, y: -0.2, z: 0.22 }, { x: 0.22, y: 0.2, z: 0.22 }, { x: -0.22, y: 0.2, z: 0.22 });
+    quad(buf, { x: 0.22, y: -0.2, z: -0.22 }, { x: -0.22, y: -0.2, z: -0.22 }, { x: -0.22, y: 0.2, z: -0.22 }, { x: 0.22, y: 0.2, z: -0.22 });
+    addStud(buf, 0, 0.2, 0);
+    return geoFrom(buf);
+  })();
+
+  var yaw = 0.78, pitch = 0.36, dist = 16, drag = null;
   function aim() {
     var cp = Math.cos(pitch), sp = Math.sin(pitch);
-    camera.position.set(Math.sin(yaw) * dist * cp, 2.2 + sp * dist, Math.cos(yaw) * dist * cp);
-    camera.lookAt(0, 3.2, 0);
+    camera.position.set(Math.sin(yaw) * dist * cp, 2.6 + sp * dist, Math.cos(yaw) * dist * cp);
+    camera.lookAt(0, 3.5, 0);
   }
-  renderer.domElement.addEventListener("pointerdown", onDown);
-  window.addEventListener("pointermove", function (e) {
-    if (!drag) return;
-    yaw = drag.yaw - (e.clientX - drag.x) * 0.008;
-    pitch = Math.max(0.15, Math.min(1.15, drag.pitch + (e.clientY - drag.y) * 0.006));
-    aim();
-  });
-  renderer.domElement.addEventListener("wheel", function (e) {
-    dist = Math.max(8, Math.min(28, dist + Math.sign(e.deltaY)));
-    aim(); e.preventDefault();
-  }, { passive: false });
-
   var ray = new THREE.Raycaster();
   var debris = [];
-  var scars = [];
-  var anim = null;
-  var chipGeo = new THREE.BoxGeometry(0.5, 0.32, 0.36);
-  var chipMat = new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.48 });
+  var simOn = false;
+  var simLeft = 0;
+  var lastStat = "点城门。同一格每次同一种掏法。";
 
-  function onDown(e) {
-    if (e.target !== renderer.domElement) return;
-    drag = { x: e.clientX, y: e.clientY, yaw: yaw, pitch: pitch, moved: false };
+  function patternCells(part, cell, kind) {
+    var list = [], seen = {}, out = [], i, j, t, key;
+    function pushThrough(ii, jj) {
+      if (ii < 0 || jj < 0 || ii >= part.nx || jj >= part.ny) return;
+      for (t = 0; t < part.nz; t++) if (has(part, ii, jj, t)) list.push([ii, jj, t]);
+    }
+    if (kind === 0) for (j = 0; j < 3; j++) pushThrough(cell.i, cell.j - j);
+    else if (kind === 1) {
+      for (j = -1; j <= 1; j++) for (i = -1; i <= 1; i++) {
+        if (i === 0 && j === 0) pushThrough(cell.i, cell.j);
+        else if (has(part, cell.i + i, cell.j + j, cell.k)) list.push([cell.i + i, cell.j + j, cell.k]);
+      }
+    } else if (kind === 2) for (i = 0; i < 4; i++) pushThrough(cell.i + i, cell.j);
+    else for (j = 0; j < 2; j++) for (i = 0; i < 2; i++) pushThrough(cell.i + i, cell.j + j);
+    for (t = 0; t < list.length && out.length < 24; t++) {
+      key = list[t][0] + "," + list[t][1] + "," + list[t][2];
+      if (seen[key]) continue;
+      seen[key] = 1;
+      out.push(list[t]);
+    }
+    return out;
+  }
+
+  function strike(e) {
+    var rect = renderer.domElement.getBoundingClientRect();
+    var ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    var hits = ray.intersectObjects(parts.map(function (p) { return p.mesh; }), false);
+    if (!hits.length || !hits[0].face) return;
+    var hit = hits[0];
+    var part = hit.object.userData.part;
+    var inward = hit.point.clone().addScaledVector(hit.face.normal, -0.08);
+    var cell = {
+      i: Math.floor((inward.x - part.ox) / BW),
+      j: Math.floor((inward.y - part.oy) / BH),
+      k: Math.floor((inward.z - part.oz) / BD)
+    };
+    if (!has(part, cell.i, cell.j, cell.k)) return;
+    var kind = hash(cell.i + Math.round(part.ox * 10), cell.j, cell.k) % NAMES.length;
+    var rand = makeRng(hash(cell.i, cell.j, kind + 11));
+    var n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize();
+    var cells = patternCells(part, cell, kind);
+    cells.forEach(function (c) {
+      part.solid[at(part, c[0], c[1], c[2])] = 0;
+      var mesh = new THREE.Mesh(chipGeo, pieceMat);
+      var origin = new THREE.Vector3(part.ox + (c[0] + 0.5) * BW, part.oy + (c[1] + 0.5) * BH, part.oz + (c[2] + 0.5) * BD);
+      mesh.position.copy(origin);
+      scene.add(mesh);
+      var vx = n.x * (1.1 + rand() * 0.8) + (rand() - 0.5) * 0.6;
+      var vy = kind === 3 ? 3.4 + rand() : (kind === 0 ? 0.15 : 0.8 + rand() * 0.7);
+      var vz = n.z * (1.1 + rand() * 0.8) + (rand() - 0.5) * 0.6;
+      if (kind === 2) vx += 2.4;
+      debris.push({
+        mesh: mesh,
+        origin: origin.clone(),
+        launched: origin.clone().addScaledVector(n, 0.42),
+        pop: 0.14,
+        pop0: 0.14,
+        vx: vx, vy: vy, vz: vz,
+        asleep: false
+      });
+    });
+    rebuild(part);
+    simOn = true;
+    simLeft = 2.6;
+    lastStat = NAMES[kind] + " · 这次 " + cells.length + " 块 · 物理开";
+  }
+
+  renderer.domElement.addEventListener("pointerdown", function (e) {
+    drag = { x: e.clientX, y: e.clientY, yaw: yaw, pitch: pitch };
     var up = function (ev) {
       window.removeEventListener("pointerup", up);
-      var moved = Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) > 6;
+      var moved = !drag || Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) > 6;
       drag = null;
       if (!moved) strike(ev);
     };
     window.addEventListener("pointerup", up);
-  }
-  function strike(e) {
-    if (anim) return;
-    var rect = renderer.domElement.getBoundingClientRect();
-    var ndc = new THREE.Vector2(
-      ((e.clientX - rect.left) / rect.width) * 2 - 1,
-      -((e.clientY - rect.top) / rect.height) * 2 + 1
-    );
-    ray.setFromCamera(ndc, camera);
-    var hits = ray.intersectObjects(gate.children, false);
-    if (!hits.length) return;
-    var hit = hits[0];
-    var n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize();
-    var cell = new THREE.Vector3(Math.round(hit.point.x * 2), Math.round(hit.point.y * 2), Math.round(hit.point.z * 2));
-    var kind = hash(cell.x, cell.y, cell.z) % NAMES.length;
-    var rand = makeRng(hash(cell.x, cell.y, kind + 7));
-    var tangent = new THREE.Vector3(n.z, 0, -n.x);
-    if (tangent.lengthSq() < 0.01) tangent.set(1, 0, 0);
-    tangent.normalize();
-    var bitangent = new THREE.Vector3().crossVectors(n, tangent).normalize();
-    var spots = [];
-    var i, j;
-    if (kind === 0) for (i = 0; i < 4; i++) spots.push([0, -i * 0.55]);
-    else if (kind === 1) for (j = -1; j <= 1; j++) for (i = -1; i <= 1; i++) spots.push([i * 0.55, j * 0.45]);
-    else if (kind === 2) for (i = 0; i < 4; i++) spots.push([i * 0.55, 0]);
-    else for (i = 0; i < 3; i++) spots.push([0, i * 0.5]);
-    var pieces = [];
-    for (i = 0; i < spots.length && pieces.length < 16; i++) {
-      var start = hit.point.clone()
-        .addScaledVector(tangent, spots[i][0])
-        .addScaledVector(bitangent, spots[i][1])
-        .addScaledVector(n, 0.2);
-      var end = start.clone();
-      var mid = start.clone();
-      var jx = (rand() - 0.5) * 0.8;
-      if (kind === 0) { end.addScaledVector(n, 0.4).add(new THREE.Vector3(jx, -start.y - 0.2, 0)); mid.add(new THREE.Vector3(jx * 0.2, -0.4, 0)); }
-      else if (kind === 1) { end.addScaledVector(tangent, spots[i][0] * 2.2).addScaledVector(bitangent, spots[i][1] * 1.4).addScaledVector(n, 1.4); mid.copy(end).addScaledVector(n, 0.8).setY(start.y + 0.6); }
-      else if (kind === 2) { end.addScaledVector(tangent, 2.4).add(new THREE.Vector3(0, -1.2, 0)); mid.addScaledVector(tangent, 1.1).addScaledVector(n, 0.4); }
-      else { end.add(new THREE.Vector3(jx, -start.y + 0.2, 0)).addScaledVector(n, 0.3); mid.addScaledVector(n, 0.8).setY(start.y + 1.3); }
-      var mesh = new THREE.Mesh(chipGeo, chipMat);
-      mesh.position.copy(start);
-      scene.add(mesh);
-      pieces.push({ mesh: mesh, s: start, m: mid, e: end, rot: (rand() - 0.5) * 3, delay: pieces.length * 0.04 });
+  });
+  window.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    yaw = drag.yaw - (e.clientX - drag.x) * 0.008;
+    pitch = Math.max(0.12, Math.min(1.15, drag.pitch + (e.clientY - drag.y) * 0.006));
+    aim();
+  });
+  renderer.domElement.addEventListener("wheel", function (e) {
+    dist = Math.max(8, Math.min(28, dist + Math.sign(e.deltaY)));
+    aim();
+    e.preventDefault();
+  }, { passive: false });
+
+  function stepPhysics(dt) {
+    if (!simOn) return;
+    simLeft -= dt;
+    var awake = false;
+    debris.forEach(function (p) {
+      if (p.asleep) return;
+      if (p.pop > 0) {
+        p.pop -= dt;
+        var u = 1 - Math.max(p.pop, 0) / p.pop0;
+        p.mesh.position.lerpVectors(p.origin, p.launched, Math.min(1, u));
+        awake = true;
+        return;
+      }
+      p.vy -= 26 * dt;
+      p.mesh.position.x += p.vx * dt;
+      p.mesh.position.y += p.vy * dt;
+      p.mesh.position.z += p.vz * dt;
+      if (p.mesh.position.y <= BH * 0.5) {
+        p.mesh.position.y = BH * 0.5;
+        p.vy = 0;
+        p.vx *= 0.45;
+        p.vz *= 0.45;
+        if (Math.hypot(p.vx, p.vz) < 0.35 || simLeft <= 0) {
+          p.vx = 0; p.vz = 0; p.asleep = true;
+        }
+      }
+      if (!p.asleep) awake = true;
+    });
+    if (!awake || simLeft <= 0) {
+      debris.forEach(function (p) {
+        if (p.mesh.position.y < BH * 0.5) p.mesh.position.y = BH * 0.5;
+        p.vx = 0; p.vy = 0; p.vz = 0; p.asleep = true;
+      });
+      simOn = false;
+      lastStat = lastStat.replace("物理开", "已落地，物理停");
     }
-    var scar = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.7, 0.08), new THREE.MeshStandardMaterial({ color: 0x1a1816 }));
-    scar.position.copy(hit.point).addScaledVector(n, 0.02);
-    scar.lookAt(hit.point.clone().add(n));
-    scene.add(scar);
-    scars.push(scar);
-    anim = { name: NAMES[kind], pieces: pieces, t0: performance.now(), dur: 900 };
-    debris = debris.concat(pieces);
   }
-  function bez(p, u) {
-    var a = 1 - u;
-    return new THREE.Vector3(
-      a * a * p.s.x + 2 * a * u * p.m.x + u * u * p.e.x,
-      a * a * p.s.y + 2 * a * u * p.m.y + u * u * p.e.y,
-      a * a * p.s.z + 2 * a * u * p.m.z + u * u * p.e.z
-    );
-  }
+
+  var snapshots = parts.map(function (p) { return p.solid.slice(); });
   document.getElementById("reset").onclick = function () {
     debris.forEach(function (p) { scene.remove(p.mesh); });
-    scars.forEach(function (s) { scene.remove(s); });
-    debris = []; scars = []; anim = null;
+    debris = []; simOn = false;
+    parts.forEach(function (p, i) { p.solid = snapshots[i].slice(); rebuild(p); });
+    lastStat = "已复原。点城门再试。";
   };
   window.addEventListener("resize", function () {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
+  var clock = new THREE.Clock();
+  function aim() {
+    var cp = Math.cos(pitch), sp = Math.sin(pitch);
+    camera.position.set(Math.sin(yaw) * dist * cp, 2.6 + sp * dist, Math.cos(yaw) * dist * cp);
+    camera.lookAt(0, 3.5, 0);
+  }
   aim();
   (function loop() {
     requestAnimationFrame(loop);
-    if (anim) {
-      var elapsed = (performance.now() - anim.t0) / anim.dur;
-      anim.pieces.forEach(function (p) {
-        var u = Math.max(0, Math.min(1, (elapsed - p.delay) / 0.75));
-        p.mesh.position.copy(bez(p, u));
-        p.mesh.rotation.z = p.rot * u;
-        p.mesh.rotation.x = p.rot * u * 0.6;
-      });
-      if (elapsed > 1.2) anim = null;
-    }
-    var label = anim ? ("正在播：" + anim.name + " · 碎片 " + anim.pieces.length) : "点城门表面";
-    document.getElementById("stat").textContent = "城门 4 块网格 · 贴图 2 张 · " + label;
+    stepPhysics(Math.min(0.05, clock.getDelta()));
+    document.getElementById("stat").textContent = "网格会跟着洞改形 · 碎块 " + debris.length + " · " + (simOn ? "物理开" : "物理关") + " · " + lastStat;
+    window.__dbg = { tris: renderer.info.render.triangles, calls: renderer.info.render.calls };
     renderer.render(scene, camera);
   })();
 })();
