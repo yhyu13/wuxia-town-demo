@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>贴图城墙 · 固定破碎</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #141311; color: #f4efe6; font: 15px/1.45 "Microsoft YaHei", "Noto Sans SC", sans-serif; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #note { position: fixed; left: 12px; top: 12px; max-width: min(460px, calc(100% - 24px)); background: rgba(20,19,17,.84); border-radius: 14px; padding: 12px 14px; pointer-events: none; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p { margin: 0; color: #e4d8c8; }
+  #stat { margin-top: 6px; }
+  #hud { position: fixed; left: 12px; right: 12px; bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  button { font: inherit; border: 0; border-radius: 999px; padding: 10px 14px; background: #f4efe6; color: #1b1a17; }
+</style>
+</head>
+<body>
+<div id="note">
+  <h1>点一块，播一段固定破碎</h1>
+  <p>墙是一张贴图，不是几千块砖。点中某一格，用固定随机挑一种爆炸，再放出最多 16 块碎片。同一格每次都是同一种。</p>
+  <div id="stat"></div>
+</div>
+<div id="hud">
+  <button type="button" id="reset">复原</button>
+</div>
+<canvas id="c"></canvas>
+<script>
+(function () {
+  "use strict";
+  var COLS = 14, ROWS = 11, BW = 28, BH = 18, SEED = 20261112;
+  var NAMES = ["垂直塌落", "放射炸开", "向右滑落", "上抛再落"];
+  var canvas = document.getElementById("c");
+  var ctx = canvas.getContext("2d");
+  var broken = {};
+  var debris = [];
+  var anim = null;
+  var layout = { x: 0, y: 0, s: 1 };
+
+  function hash(a, b, c) {
+    var h = (SEED ^ (a * 374761393) ^ (b * 668265263) ^ (c * 1442695041)) >>> 0;
+    h = Math.imul(h ^ (h >>> 16), 2246822519);
+    h = Math.imul(h ^ (h >>> 13), 3266489917);
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+  function rng(n) {
+    var s = n >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function patternOf(c, r) { return hash(c, r, 1) % NAMES.length; }
+
+  var wall = document.createElement("canvas");
+  wall.width = COLS * BW;
+  wall.height = ROWS * BH;
+  var wctx = wall.getContext("2d");
+  function paintWall() {
+    wctx.clearRect(0, 0, wall.width, wall.height);
+    var r, c, x, y, off, shade;
+    for (r = 0; r < ROWS; r++) {
+      off = (r % 2) * (BW / 2);
+      for (c = 0; c < COLS; c++) {
+        if (broken[c + "," + r]) continue;
+        if (r > 6 && c > 5 && c < 9) continue;
+        var off = (r % 2) ? BW / 2 : 0;
+        x = c * BW + off;
+        if (x < 0 || x + BW > wall.width + 1) continue;
+        y = r * BH;
+        var door = r >= 6 && c >= 5 && c <= 8;
+        if (door) continue;
+        shade = (hash(c, r, 9) % 5) * 0.03;
+        var roof = r < 2;
+        var red = roof ? 42 : Math.round(168 - shade * 80);
+        var g = roof ? 40 : Math.round(52 - shade * 40);
+        var b = roof ? 38 : Math.round(40 - shade * 20);
+        wctx.fillStyle = "rgb(" + red + "," + g + "," + b + ")";
+        wctx.fillRect(x + 1.5, y + 1.5, BW - 3, BH - 3);
+        wctx.fillStyle = "rgba(0,0,0,.28)";
+        wctx.fillRect(x + 1.5, y + BH - 3.5, BW - 3, 2);
+        wctx.fillStyle = roof ? "#6a655c" : "#e7c9a2";
+        var studs = roof ? 2 : 2;
+        for (var s = 0; s < studs; s++) {
+          wctx.beginPath();
+          wctx.ellipse(x + 8 + s * 12, y + 5, 3.2, 2.2, 0, 0, Math.PI * 2);
+          wctx.fill();
+        }
+      }
+    }
+  }
+
+  function cellAt(px, py) {
+    var x = (px - layout.x) / layout.s;
+    var y = (py - layout.y) / layout.s;
+    if (x < 0 || y < 0 || x >= wall.width || y >= wall.height) return null;
+    var r = Math.floor(y / BH);
+    var off = (r % 2) ? BW / 2 : 0;
+    var c = Math.floor((x - off) / BW);
+    if (c < 0 || r < 0 || c >= COLS || r >= ROWS) return null;
+    if (r >= 6 && c >= 5 && c <= 8) return null;
+    if (broken[c + "," + r]) return null;
+    return { c: c, r: r };
+  }
+
+  function bake(cell) {
+    var kind = patternOf(cell.c, cell.r);
+    var rand = rng(hash(cell.c, cell.r, kind + 3));
+    var pieces = [];
+    var list = [];
+    var dc, dr, i;
+    if (kind === 0) for (i = 0; i < 4; i++) list.push([cell.c, cell.r + i]);
+    else if (kind === 1) {
+      for (dr = -1; dr <= 1; dr++) for (dc = -1; dc <= 1; dc++) list.push([cell.c + dc, cell.r + dr]);
+    } else if (kind === 2) for (i = 0; i < 4; i++) list.push([cell.c + i, cell.r]);
+    else for (i = 0; i < 3; i++) list.push([cell.c, cell.r - i]);
+    for (i = 0; i < list.length && pieces.length < 16; i++) {
+      dc = list[i][0]; dr = list[i][1];
+      if (dc < 0 || dr < 0 || dc >= COLS || dr >= ROWS) continue;
+      if (dr >= 6 && dc >= 5 && dc <= 8) continue;
+      if (broken[dc + "," + dr]) continue;
+      var jx = (rand() - 0.5) * 36;
+      var off = (dr % 2) ? BW / 2 : 0;
+      var sx = layout.x + (dc * BW + off + BW / 2) * layout.s;
+      var sy = layout.y + (dr * BH + BH / 2) * layout.s;
+      var ex = sx, ey = sy, mx = sx, my = sy;
+      if (kind === 0) { ex = sx + jx; ey = sy + 160 + rand() * 40; mx = sx + jx * 0.3; my = sy + 30; }
+      else if (kind === 1) { ex = sx + (dc - cell.c) * 70 + jx; ey = sy + 90 + Math.abs(dr - cell.r) * 20; mx = sx + (dc - cell.c) * 90; my = sy - 36; }
+      else if (kind === 2) { ex = sx + 130; ey = sy + 50 + rand() * 30; mx = sx + 70; my = sy - 10; }
+      else { ex = sx + jx; ey = sy + 140; mx = sx + jx; my = sy - 70; }
+      pieces.push({ c: dc, r: dr, sx: sx, sy: sy, mx: mx, my: my, ex: ex, ey: ey, rot: (rand() - 0.5) * 2.2, delay: pieces.length * 0.04 });
+      broken[dc + "," + dr] = 1;
+    }
+    paintWall();
+    return { kind: kind, name: NAMES[kind], pieces: pieces, t0: performance.now(), dur: 900 };
+  }
+
+  function bez(p, u) {
+    var a = 1 - u;
+    return {
+      x: a * a * p.sx + 2 * a * u * p.mx + u * u * p.ex,
+      y: a * a * p.sy + 2 * a * u * p.my + u * u * p.ey,
+      rot: p.rot * u
+    };
+  }
+
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(canvas.clientWidth * dpr);
+    canvas.height = Math.floor(canvas.clientHeight * dpr);
+    var margin = Math.min(canvas.width, canvas.height) * 0.12;
+    var s = Math.min((canvas.width - margin * 2) / wall.width, (canvas.height - margin * 2) / (wall.height + 80));
+    layout.s = s;
+    layout.x = (canvas.width - wall.width * s) / 2;
+    layout.y = (canvas.height - wall.height * s) / 2 - 10 * dpr;
+  }
+
+  function draw() {
+    resize();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = "#141311";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#2c3328";
+    ctx.fillRect(layout.x - 18, layout.y + wall.height * layout.s - 6, wall.width * layout.s + 36, 28);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(wall, layout.x, layout.y, wall.width * layout.s, wall.height * layout.s);
+    var now = performance.now();
+    if (anim) {
+      var elapsed = (now - anim.t0) / anim.dur;
+      anim.pieces.forEach(function (p) {
+        var u = Math.max(0, Math.min(1, (elapsed - p.delay) / 0.72));
+        var q = bez(p, u);
+        ctx.save();
+        ctx.translate(q.x, q.y);
+        ctx.rotate(q.rot);
+        ctx.fillStyle = "#bd3c2e";
+        ctx.fillRect(-layout.s * BW / 2, -layout.s * BH / 2, layout.s * (BW - 4), layout.s * (BH - 4));
+        ctx.fillStyle = "#e7c9a2";
+        ctx.beginPath();
+        ctx.ellipse(-6, -layout.s * BH / 2 + 6, 3, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+      if (elapsed > 1.15) anim = null;
+    }
+    var left = COLS * ROWS;
+    Object.keys(broken).forEach(function () { left--; });
+    var label = anim ? ("正在播：" + anim.name + " · 碎片 " + anim.pieces.length) : "点墙面上的一格";
+    document.getElementById("stat").textContent = "贴图 1 张 · 还在的格子 " + left + " · " + label;
+    requestAnimationFrame(draw);
+  }
+
+  canvas.addEventListener("pointerdown", function (e) {
+    if (anim) return;
+    var rect = canvas.getBoundingClientRect();
+    var dpr = canvas.width / rect.width;
+    var cell = cellAt((e.clientX - rect.left) * dpr, (e.clientY - rect.top) * dpr);
+    if (!cell) return;
+    anim = bake(cell);
+  });
+  document.getElementById("reset").onclick = function () { broken = {}; anim = null; paintWall(); };
+  paintWall();
+  draw();
+})();
+</script>
+</body>
+</html>
