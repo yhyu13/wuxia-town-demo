@@ -24,7 +24,7 @@
 <body>
 <div id="note">
   <h1>城门这一块 · 掏空</h1>
-  <p>不动原来的城镇。轻点挖一个圆坑，按住拖就顺着指尖挖开一条。绿色还在算，红色已经停。</p>
+  <p>不动原来的城镇。轻点挖一个圆坑，按住拖就顺着指尖挖。绿色还在算，红色停在地上，不会再消失。</p>
   <div id="stat"></div>
 </div>
 <div id="hud"><button type="button" id="reset">复原</button></div>
@@ -156,7 +156,7 @@
   })();
 
   var yaw = 0.78, pitch = 0.36, dist = 16, gesture = null;
-  var TAP_R = 2.55, SWIPE_R = 2.2, CAP = 140;
+  var TAP_R = 2.55, SWIPE_R = 2.2, MAX_BRICKS = 2048;
   var physMode = "opt", physMs = 0, solverPasses = 0;
   function aim() {
     var cp = Math.cos(pitch), sp = Math.sin(pitch);
@@ -165,12 +165,80 @@
   }
   var ray = new THREE.Raycaster();
   var debris = [];
+  var dummy = new THREE.Object3D();
+  var restDirty = false;
+  var liveMesh = new THREE.InstancedMesh(chipGeo, matOn, MAX_BRICKS);
+  var restMesh = new THREE.InstancedMesh(chipGeo, matOff, MAX_BRICKS);
+  liveMesh.frustumCulled = false;
+  restMesh.frustumCulled = false;
+  liveMesh.count = 0;
+  restMesh.count = 0;
+  if (THREE.DynamicDrawUsage) {
+    liveMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    restMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  }
+  scene.add(liveMesh);
+  scene.add(restMesh);
+  function writeInstance(mesh, index, pos) {
+    dummy.position.copy(pos);
+    dummy.rotation.set(0, 0, 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(index, dummy.matrix);
+  }
+  function park(p) {
+    if (p.parked) return;
+    p.parked = true;
+    p.asleep = true;
+    p.vx = 0; p.vy = 0; p.vz = 0;
+    if (restMesh.count >= MAX_BRICKS) return;
+    writeInstance(restMesh, restMesh.count, p.pos);
+    restMesh.count += 1;
+    restDirty = true;
+  }
+  function syncLive() {
+    var n = 0, i;
+    for (i = 0; i < debris.length; i++) {
+      if (debris[i].asleep) continue;
+      writeInstance(liveMesh, n, debris[i].pos);
+      n++;
+    }
+    liveMesh.count = n;
+    liveMesh.instanceMatrix.needsUpdate = true;
+    if (restDirty) { restMesh.instanceMatrix.needsUpdate = true; restDirty = false; }
+  }
   var simOn = false;
   var lastStat = "轻点是圆坑，按住拖顺着指尖挖。空白处拖动能转头。";
 
-  function paint(p) {
-    var want = p.asleep ? matOff : matOn;
-    if (p.mesh.material !== want) p.mesh.material = want;
+  function carve(hit, radius) {
+    if (!hit) return 0;
+    var cells = ballCells(hit.part, hit.cell, radius);
+    if (!cells.length) return 0;
+    var made = 0, n = hit.n;
+    cells.forEach(function (c) {
+      if (debris.length >= MAX_BRICKS) return;
+      hit.part.solid[at(hit.part, c[0], c[1], c[2])] = 0;
+      var origin = new THREE.Vector3(hit.part.ox + (c[0] + 0.5) * BW, hit.part.oy + (c[1] + 0.5) * BH, hit.part.oz + (c[2] + 0.5) * BD);
+      var rnd = (hash(c[0], c[1], c[2]) % 1000) / 1000;
+      var rnd2 = (hash(c[2], c[0], 7) % 1000) / 1000;
+      debris.push({
+        pos: origin.clone(),
+        origin: origin.clone(),
+        launched: origin.clone().addScaledVector(n, 0.42),
+        pop: 0.14,
+        pop0: 0.14,
+        age: 0,
+        vx: n.x * (1.05 + rnd * 0.7) + (rnd - 0.5) * 0.45,
+        vy: 0.65 + rnd * 0.7,
+        vz: n.z * (1.05 + rnd2 * 0.7) + (rnd2 - 0.5) * 0.45,
+        asleep: false,
+        parked: false
+      });
+      made++;
+    });
+    if (made) rebuild(hit.part);
+    window.__lastCarve = { n: cells.length, spawned: made, span: spanOf(cells), radius: radius };
+    return made;
   }
   function solidCell(part, x, y, z, nx, ny, nz) {
     function cellAt(px, py, pz) {
@@ -234,38 +302,111 @@
     }
     return { di: i1 - i0, dj: j1 - j0, dk: k1 - k0 };
   }
-  function carve(hit, radius) {
-    if (!hit) return 0;
-    var cells = ballCells(hit.part, hit.cell, radius);
-    if (!cells.length) return 0;
-    var made = 0, n = hit.n;
-    cells.forEach(function (c) {
-      hit.part.solid[at(hit.part, c[0], c[1], c[2])] = 0;
-      if (debris.length >= CAP) return;
-      var mesh = new THREE.Mesh(chipGeo, matOn);
-      var origin = new THREE.Vector3(hit.part.ox + (c[0] + 0.5) * BW, hit.part.oy + (c[1] + 0.5) * BH, hit.part.oz + (c[2] + 0.5) * BD);
-      mesh.position.copy(origin);
-      scene.add(mesh);
-      var rnd = (hash(c[0], c[1], c[2]) % 1000) / 1000;
-      var rnd2 = (hash(c[2], c[0], 7) % 1000) / 1000;
-      debris.push({
-        mesh: mesh,
-        origin: origin.clone(),
-        launched: origin.clone().addScaledVector(n, 0.42),
-        pop: 0.14,
-        pop0: 0.14,
-        age: 0,
-        vx: n.x * (1.05 + rnd * 0.7) + (rnd - 0.5) * 0.45,
-        vy: 0.65 + rnd * 0.7,
-        vz: n.z * (1.05 + rnd2 * 0.7) + (rnd2 - 0.5) * 0.45,
-        asleep: false
-      });
-      made++;
-    });
-    rebuild(hit.part);
-    window.__lastCarve = { n: cells.length, spawned: made, span: spanOf(cells), radius: radius };
-    return cells.length;
+  function separate(a, b) {
+    var minDist = 0.46;
+    var dx = b.pos.x - a.pos.x, dy = b.pos.y - a.pos.y, dz = b.pos.z - a.pos.z;
+    var d2 = dx * dx + dy * dy + dz * dz;
+    if (d2 >= minDist * minDist || d2 < 1e-8) return;
+    var d = Math.sqrt(d2), pen = (minDist - d) * 0.5, nx = dx / d, nz = dz / d, rel, j;
+    a.pos.x -= nx * pen; a.pos.z -= nz * pen;
+    b.pos.x += nx * pen; b.pos.z += nz * pen;
+    if (a.pos.y < BH * 0.5) a.pos.y = BH * 0.5;
+    if (b.pos.y < BH * 0.5) b.pos.y = BH * 0.5;
+    rel = (b.vx - a.vx) * nx + (b.vz - a.vz) * nz;
+    if (rel < 0) {
+      j = rel * 0.5;
+      a.vx += j * nx; a.vz += j * nz;
+      b.vx -= j * nx; b.vz -= j * nz;
+    }
   }
+  function hashPass(live) {
+    var inv = 2, bins = Object.create(null), i, p, ix, iz, key, keys, k, list, a, nb, j;
+    var neigh = [[1, 0], [0, 1], [1, 1], [-1, 1]];
+    for (i = 0; i < live.length; i++) {
+      p = live[i];
+      ix = Math.floor(p.pos.x * inv);
+      iz = Math.floor(p.pos.z * inv);
+      key = ix + "," + iz;
+      if (!bins[key]) bins[key] = [];
+      bins[key].push(p);
+    }
+    keys = Object.keys(bins);
+    for (k = 0; k < keys.length; k++) {
+      ix = parseInt(keys[k], 10);
+      iz = parseInt(keys[k].slice(keys[k].indexOf(",") + 1), 10);
+      list = bins[keys[k]];
+      for (a = 0; a < list.length; a++) {
+        for (j = a + 1; j < list.length; j++) separate(list[a], list[j]);
+      }
+      for (j = 0; j < neigh.length; j++) {
+        nb = bins[(ix + neigh[j][0]) + "," + (iz + neigh[j][1])];
+        if (!nb) continue;
+        for (a = 0; a < list.length; a++) {
+          for (i = 0; i < nb.length; i++) separate(list[a], nb[i]);
+        }
+      }
+    }
+  }
+  function stepPhysics(dt) {
+    var t0 = performance.now();
+    var maxMode = physMode === "max";
+    var sub = maxMode ? 4 : 1;
+    var h = dt / Math.max(sub, 1);
+    var i, s, p, u, speed, grounded, live;
+    for (i = 0; i < debris.length; i++) {
+      p = debris[i];
+      if (p.asleep) continue;
+      p.age += dt;
+      if (p.pop > 0) {
+        p.pop -= dt;
+        u = 1 - Math.max(p.pop, 0) / p.pop0;
+        p.pos.lerpVectors(p.origin, p.launched, Math.min(1, u));
+        continue;
+      }
+      for (s = 0; s < sub; s++) {
+        p.vy -= 26 * h;
+        p.pos.x += p.vx * h;
+        p.pos.y += p.vy * h;
+        p.pos.z += p.vz * h;
+        if (p.pos.y <= BH * 0.5) {
+          p.pos.y = BH * 0.5;
+          p.vy = 0;
+          p.vx *= maxMode ? 0.62 : 0.45;
+          p.vz *= maxMode ? 0.62 : 0.45;
+        }
+      }
+      speed = Math.hypot(p.vx, p.vz);
+      grounded = p.pos.y <= BH * 0.5 + 0.001;
+      if (grounded && (maxMode ? p.age > 4.8 : (speed < 0.35 || p.age > 1.2))) park(p);
+    }
+    live = [];
+    for (i = 0; i < debris.length; i++) if (!debris[i].asleep && debris[i].pop <= 0) live.push(debris[i]);
+    solverPasses = 0;
+    if (live.length > 1) {
+      if (maxMode) {
+        while (performance.now() - t0 < 22 && solverPasses < 20000) { hashPass(live); solverPasses++; }
+      } else {
+        hashPass(live);
+        solverPasses = 1;
+      }
+    }
+    simOn = false;
+    for (i = 0; i < debris.length; i++) if (!debris[i].asleep) simOn = true;
+    syncLive();
+    physMs = performance.now() - t0;
+  }
+
+  var snapshots = parts.map(function (p) { return p.solid.slice(); });
+  document.getElementById("reset").onclick = function () {
+    debris = []; simOn = false;
+    liveMesh.count = 0; restMesh.count = 0;
+    liveMesh.instanceMatrix.needsUpdate = true;
+    restMesh.instanceMatrix.needsUpdate = true;
+    restDirty = false;
+    parts.forEach(function (p, i) { p.solid = snapshots[i].slice(); rebuild(p); });
+    lastStat = "已复原。轻点挖圆坑，按住拖顺着指尖挖。";
+    window.__lastCarve = null;
+  };
 
   renderer.domElement.addEventListener("pointerdown", function (e) {
     if (e.button !== 0) {
@@ -309,93 +450,6 @@
     e.preventDefault();
   }, { passive: false });
 
-  function pairPass(live) {
-    var minDist = 0.46, a, b, dx, dy, dz, d2, d, pen, nx, nz, rel, j;
-    for (a = 0; a < live.length; a++) {
-      for (b = a + 1; b < live.length; b++) {
-        dx = live[b].mesh.position.x - live[a].mesh.position.x;
-        dy = live[b].mesh.position.y - live[a].mesh.position.y;
-        dz = live[b].mesh.position.z - live[a].mesh.position.z;
-        d2 = dx * dx + dy * dy + dz * dz;
-        if (d2 >= minDist * minDist || d2 < 1e-8) continue;
-        d = Math.sqrt(d2);
-        pen = (minDist - d) * 0.5;
-        nx = dx / d; nz = dz / d;
-        live[a].mesh.position.x -= nx * pen;
-        live[a].mesh.position.z -= nz * pen;
-        live[b].mesh.position.x += nx * pen;
-        live[b].mesh.position.z += nz * pen;
-        if (live[a].mesh.position.y < BH * 0.5) live[a].mesh.position.y = BH * 0.5;
-        if (live[b].mesh.position.y < BH * 0.5) live[b].mesh.position.y = BH * 0.5;
-        rel = (live[b].vx - live[a].vx) * nx + (live[b].vz - live[a].vz) * nz;
-        if (rel < 0) {
-          j = rel * 0.5;
-          live[a].vx += j * nx; live[a].vz += j * nz;
-          live[b].vx -= j * nx; live[b].vz -= j * nz;
-        }
-      }
-    }
-  }
-  function stepPhysics(dt) {
-    var t0 = performance.now();
-    var maxMode = physMode === "max";
-    var sub = maxMode ? 4 : 1;
-    var h = dt / Math.max(sub, 1);
-    var i, s, p, u, speed, grounded;
-    for (i = 0; i < debris.length; i++) {
-      p = debris[i];
-      if (p.asleep) { paint(p); continue; }
-      p.age += dt;
-      if (p.pop > 0) {
-        p.pop -= dt;
-        u = 1 - Math.max(p.pop, 0) / p.pop0;
-        p.mesh.position.lerpVectors(p.origin, p.launched, Math.min(1, u));
-        paint(p);
-        continue;
-      }
-      for (s = 0; s < sub; s++) {
-        p.vy -= 26 * h;
-        p.mesh.position.x += p.vx * h;
-        p.mesh.position.y += p.vy * h;
-        p.mesh.position.z += p.vz * h;
-        if (p.mesh.position.y <= BH * 0.5) {
-          p.mesh.position.y = BH * 0.5;
-          p.vy = 0;
-          p.vx *= maxMode ? 0.62 : 0.45;
-          p.vz *= maxMode ? 0.62 : 0.45;
-        }
-      }
-      speed = Math.hypot(p.vx, p.vz);
-      grounded = p.mesh.position.y <= BH * 0.5 + 0.001;
-      if (grounded && (maxMode ? p.age > 4.8 : (speed < 0.35 || p.age > 1.2))) {
-        p.vx = 0; p.vy = 0; p.vz = 0; p.asleep = true;
-      }
-      paint(p);
-    }
-    solverPasses = 0;
-    if (maxMode) {
-      var live = [];
-      for (i = 0; i < debris.length; i++) if (!debris[i].asleep && debris[i].pop <= 0) live.push(debris[i]);
-      if (live.length > 1) {
-        while (performance.now() - t0 < 22 && solverPasses < 20000) {
-          pairPass(live);
-          solverPasses++;
-        }
-      }
-    }
-    simOn = false;
-    for (i = 0; i < debris.length; i++) if (!debris[i].asleep) simOn = true;
-    physMs = performance.now() - t0;
-  }
-
-  var snapshots = parts.map(function (p) { return p.solid.slice(); });
-  document.getElementById("reset").onclick = function () {
-    debris.forEach(function (p) { scene.remove(p.mesh); });
-    debris = []; simOn = false;
-    parts.forEach(function (p, i) { p.solid = snapshots[i].slice(); rebuild(p); });
-    lastStat = "已复原。轻点挖圆坑，按住拖顺着指尖挖。";
-    window.__lastCarve = null;
-  };
   function setMode(m) {
     physMode = m;
     document.getElementById("mode-opt").classList.toggle("on", m === "opt");
@@ -436,9 +490,9 @@
       fpsStamp = now;
       document.getElementById("fps").textContent = fpsShown + " 帧";
       document.getElementById("band").textContent = bandOf(fpsShown) + " · 绿 " + activeN + " 在算 · 红 " + sleepN + " 已停";
-      document.getElementById("load").textContent = "物理 " + physMs.toFixed(1) + " ms · " + (physMode === "max" ? "吃满，上限" : "优化，下限");
+      document.getElementById("load").textContent = "物理 " + physMs.toFixed(1) + " ms · 绘制 " + renderer.info.render.calls + " · " + (physMode === "max" ? "吃满，上限" : "优化，下限");
     }
-    document.getElementById("stat").textContent = lastStat + (debris.length >= CAP ? " · 碎块已满，洞还能挖" : "");
+    document.getElementById("stat").textContent = lastStat;
     window.__dbg = {
       fps: Math.round(fpsEma),
       physMs: Math.round(physMs * 10) / 10,
@@ -449,6 +503,8 @@
       passes: solverPasses,
       tris: renderer.info.render.triangles,
       calls: renderer.info.render.calls,
+      liveDraw: liveMesh.count,
+      restDraw: restMesh.count,
       carve: window.__lastCarve || null
     };
     renderer.render(scene, camera);
