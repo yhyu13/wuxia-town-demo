@@ -6,28 +6,42 @@
 <title>城门 · 一块网格掏空</title>
 <style>
   html, body { margin: 0; height: 100%; background: #141311; color: #f4efe6; font: 15px/1.45 "Microsoft YaHei", "Noto Sans SC", sans-serif; overflow: hidden; }
-  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-  #note { position: fixed; left: 12px; top: 12px; max-width: min(460px, calc(100% - 24px)); background: rgba(20,19,17,.84); border-radius: 14px; padding: 12px 14px; pointer-events: none; }
+  canvas { display: block; position: relative; z-index: 0; width: 100%; height: 100%; touch-action: none; }
+  #note, #hud, #perf { z-index: 2; }
+  #note { position: fixed; left: 12px; top: 12px; max-width: min(420px, calc(100% - 24px)); background: rgba(20,19,17,.84); border-radius: 14px; padding: 12px 14px; pointer-events: none; }
   h1 { font-size: 18px; margin: 0 0 4px; }
   p { margin: 0; color: #e4d8c8; }
   #stat { margin-top: 6px; }
-  #hud { position: fixed; left: 12px; bottom: 12px; }
-  button { font: inherit; border: 0; border-radius: 999px; padding: 10px 14px; background: #f4efe6; color: #1b1a17; }
+  #hud { position: fixed; left: 12px; bottom: 12px; display: flex; gap: 8px; }
+  #perf { position: fixed; right: 12px; bottom: 12px; width: min(280px, calc(100% - 24px)); background: rgba(20,19,17,.9); border-radius: 14px; padding: 12px 14px; }
+  #fps { font-size: 28px; font-weight: 700; line-height: 1.1; }
+  #perf p, #band, #load { margin: 4px 0 0; color: #e4d8c8; }
+  .modes { display: flex; gap: 8px; margin-top: 8px; }
+  button { font: inherit; border: 0; border-radius: 999px; padding: 10px 14px; background: transparent; color: #f4efe6; box-shadow: inset 0 0 0 1px #f4efe6; }
+  button.on { background: #f4efe6; color: #1b1a17; box-shadow: none; }
 </style>
 </head>
 <body>
 <div id="note">
   <h1>城门这一块 · 掏空</h1>
-  <p>不动原来的城镇。城门平时是几块整网格，表面按积木比例留缝和凸点。点中后这块网格被挖穿，碎块是同样的积木，弹出后落到地上就停。</p>
+  <p>不动原来的城镇。轻点挖一个圆坑，按住拖就顺着指尖挖开一条。绿色还在算，红色已经停。</p>
   <div id="stat"></div>
 </div>
 <div id="hud"><button type="button" id="reset">复原</button></div>
+<div id="perf">
+  <div id="fps">-- 帧</div>
+  <div id="band">帧率取样中</div>
+  <p id="load">物理 -- ms</p>
+  <div class="modes">
+    <button type="button" id="mode-opt" class="on">物理优化</button>
+    <button type="button" id="mode-max">物理吃满</button>
+  </div>
+</div>
 <script src="./three.min.js"></script>
 <script>
 (function () {
   "use strict";
   if (!window.THREE) { document.body.textContent = "缺少 three.js。"; return; }
-  var NAMES = ["垂直掏穿", "中心炸开", "横向掏穿", "向上崩"];
   var SEED = 20261112;
   var BW = 0.48, BH = 0.4, BD = 0.48, STUD_H = 0.11, STUD_R = 0.15;
   var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -48,37 +62,8 @@
     h = Math.imul(h ^ (h >>> 13), 3266489917);
     return (h ^ (h >>> 16)) >>> 0;
   }
-  function makeRng(n) {
-    var s = n >>> 0;
-    return function () {
-      s = (s + 0x6D2B79F5) >>> 0;
-      var t = Math.imul(s ^ (s >>> 15), 1 | s);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-  function plasticTexture() {
-    var c = document.createElement("canvas");
-    c.width = 128; c.height = 128;
-    var g = c.getContext("2d");
-    g.fillStyle = "#c44732";
-    g.fillRect(0, 0, 128, 128);
-    g.strokeStyle = "rgba(40,12,8,.55)";
-    g.lineWidth = 4;
-    g.strokeRect(2, 2, 124, 124);
-    g.fillStyle = "#e7b56a";
-    g.beginPath();
-    g.ellipse(64, 42, 28, 22, 0, 0, Math.PI * 2);
-    g.fill();
-    g.fillStyle = "rgba(255,255,255,.2)";
-    g.beginPath();
-    g.ellipse(54, 34, 10, 7, 0, 0, Math.PI * 2);
-    g.fill();
-    var tex = new THREE.CanvasTexture(c);
-    if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }
-  var pieceMat = new THREE.MeshStandardMaterial({ map: plasticTexture(), roughness: 0.42, metalness: 0, side: THREE.DoubleSide });
+  var matOn = new THREE.MeshStandardMaterial({ color: 0x3ecf6e, emissive: 0x145c32, emissiveIntensity: 0.45, roughness: 0.42, metalness: 0, side: THREE.DoubleSide });
+  var matOff = new THREE.MeshStandardMaterial({ color: 0xe04545, emissive: 0x5a1414, emissiveIntensity: 0.35, roughness: 0.42, metalness: 0, side: THREE.DoubleSide });
   var wallMat = new THREE.MeshStandardMaterial({ color: 0xc44732, roughness: 0.4, metalness: 0, side: THREE.DoubleSide });
 
   function emptyBuf() { return { p: [], n: [] }; }
@@ -170,7 +155,9 @@
     return geoFrom(buf);
   })();
 
-  var yaw = 0.78, pitch = 0.36, dist = 16, drag = null;
+  var yaw = 0.78, pitch = 0.36, dist = 16, gesture = null;
+  var TAP_R = 2.55, SWIPE_R = 2.2, CAP = 140;
+  var physMode = "opt", physMs = 0, solverPasses = 0;
   function aim() {
     var cp = Math.cos(pitch), sp = Math.sin(pitch);
     camera.position.set(Math.sin(yaw) * dist * cp, 2.6 + sp * dist, Math.cos(yaw) * dist * cp);
@@ -179,92 +166,142 @@
   var ray = new THREE.Raycaster();
   var debris = [];
   var simOn = false;
-  var simLeft = 0;
-  var lastStat = "点城门。同一格每次同一种掏法。";
+  var lastStat = "轻点是圆坑，按住拖顺着指尖挖。空白处拖动能转头。";
 
-  function patternCells(part, cell, kind) {
-    var list = [], seen = {}, out = [], i, j, t, key;
-    function pushThrough(ii, jj) {
-      if (ii < 0 || jj < 0 || ii >= part.nx || jj >= part.ny) return;
-      for (t = 0; t < part.nz; t++) if (has(part, ii, jj, t)) list.push([ii, jj, t]);
-    }
-    if (kind === 0) for (j = 0; j < 3; j++) pushThrough(cell.i, cell.j - j);
-    else if (kind === 1) {
-      for (j = -1; j <= 1; j++) for (i = -1; i <= 1; i++) {
-        if (i === 0 && j === 0) pushThrough(cell.i, cell.j);
-        else if (has(part, cell.i + i, cell.j + j, cell.k)) list.push([cell.i + i, cell.j + j, cell.k]);
-      }
-    } else if (kind === 2) for (i = 0; i < 4; i++) pushThrough(cell.i + i, cell.j);
-    else for (j = 0; j < 2; j++) for (i = 0; i < 2; i++) pushThrough(cell.i + i, cell.j + j);
-    for (t = 0; t < list.length && out.length < 24; t++) {
-      key = list[t][0] + "," + list[t][1] + "," + list[t][2];
-      if (seen[key]) continue;
-      seen[key] = 1;
-      out.push(list[t]);
-    }
-    return out;
+  function paint(p) {
+    var want = p.asleep ? matOff : matOn;
+    if (p.mesh.material !== want) p.mesh.material = want;
   }
-
-  function strike(e) {
+  function solidCell(part, x, y, z, nx, ny, nz) {
+    function cellAt(px, py, pz) {
+      return {
+        i: Math.floor((px - part.ox) / BW),
+        j: Math.floor((py - part.oy) / BH),
+        k: Math.floor((pz - part.oz) / BD)
+      };
+    }
+    var base = cellAt(x, y, z);
+    if (has(part, base.i, base.j, base.k)) return base;
+    var steps = [0.1, 0.22, 0.4, 0.62], s, c;
+    for (s = 0; s < steps.length; s++) {
+      c = cellAt(x - nx * steps[s], y - ny * steps[s], z - nz * steps[s]);
+      if (has(part, c.i, c.j, c.k)) return c;
+    }
+    var a, b, d;
+    for (d = -1; d <= 1; d++) for (b = -1; b <= 1; b++) for (a = -1; a <= 1; a++) {
+      if (has(part, base.i + a, base.j + b, base.k + d)) return { i: base.i + a, j: base.j + b, k: base.k + d };
+    }
+    return null;
+  }
+  function pick(clientX, clientY) {
     var rect = renderer.domElement.getBoundingClientRect();
-    var ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    var ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
     var hits = ray.intersectObjects(parts.map(function (p) { return p.mesh; }), false);
-    if (!hits.length || !hits[0].face) return;
+    if (!hits.length || !hits[0].face) return null;
     var hit = hits[0];
-    var part = hit.object.userData.part;
-    var inward = hit.point.clone().addScaledVector(hit.face.normal, -0.08);
-    var cell = {
-      i: Math.floor((inward.x - part.ox) / BW),
-      j: Math.floor((inward.y - part.oy) / BH),
-      k: Math.floor((inward.z - part.oz) / BD)
-    };
-    if (!has(part, cell.i, cell.j, cell.k)) return;
-    var kind = hash(cell.i + Math.round(part.ox * 10), cell.j, cell.k) % NAMES.length;
-    var rand = makeRng(hash(cell.i, cell.j, kind + 11));
     var n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize();
-    var cells = patternCells(part, cell, kind);
+    var part = hit.object.userData.part;
+    var cell = solidCell(part, hit.point.x, hit.point.y, hit.point.z, n.x, n.y, n.z);
+    if (!cell) return null;
+    return { part: part, cell: cell, n: n };
+  }
+  function pickAround(x, y) {
+    var hit = pick(x, y);
+    if (hit) return hit;
+    var ox = [0, -6, 6, -12, 12], oy = [0, -6, 6], i, j;
+    for (j = 0; j < oy.length; j++) for (i = 0; i < ox.length; i++) {
+      if (!ox[i] && !oy[j]) continue;
+      hit = pick(x + ox[i], y + oy[j]);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  function ballCells(part, cell, radius) {
+    var list = [], ri = Math.ceil(radius), r2 = radius * radius, di, dj, dk;
+    for (dk = -ri; dk <= ri; dk++) for (dj = -ri; dj <= ri; dj++) for (di = -ri; di <= ri; di++) {
+      if (di * di + dj * dj + dk * dk > r2) continue;
+      if (has(part, cell.i + di, cell.j + dj, cell.k + dk)) list.push([cell.i + di, cell.j + dj, cell.k + dk]);
+    }
+    return list;
+  }
+  function spanOf(cells) {
+    var i0 = 99, i1 = -99, j0 = 99, j1 = -99, k0 = 99, k1 = -99, t;
+    for (t = 0; t < cells.length; t++) {
+      i0 = Math.min(i0, cells[t][0]); i1 = Math.max(i1, cells[t][0]);
+      j0 = Math.min(j0, cells[t][1]); j1 = Math.max(j1, cells[t][1]);
+      k0 = Math.min(k0, cells[t][2]); k1 = Math.max(k1, cells[t][2]);
+    }
+    return { di: i1 - i0, dj: j1 - j0, dk: k1 - k0 };
+  }
+  function carve(hit, radius) {
+    if (!hit) return 0;
+    var cells = ballCells(hit.part, hit.cell, radius);
+    if (!cells.length) return 0;
+    var made = 0, n = hit.n;
     cells.forEach(function (c) {
-      part.solid[at(part, c[0], c[1], c[2])] = 0;
-      var mesh = new THREE.Mesh(chipGeo, pieceMat);
-      var origin = new THREE.Vector3(part.ox + (c[0] + 0.5) * BW, part.oy + (c[1] + 0.5) * BH, part.oz + (c[2] + 0.5) * BD);
+      hit.part.solid[at(hit.part, c[0], c[1], c[2])] = 0;
+      if (debris.length >= CAP) return;
+      var mesh = new THREE.Mesh(chipGeo, matOn);
+      var origin = new THREE.Vector3(hit.part.ox + (c[0] + 0.5) * BW, hit.part.oy + (c[1] + 0.5) * BH, hit.part.oz + (c[2] + 0.5) * BD);
       mesh.position.copy(origin);
       scene.add(mesh);
-      var vx = n.x * (1.1 + rand() * 0.8) + (rand() - 0.5) * 0.6;
-      var vy = kind === 3 ? 3.4 + rand() : (kind === 0 ? 0.15 : 0.8 + rand() * 0.7);
-      var vz = n.z * (1.1 + rand() * 0.8) + (rand() - 0.5) * 0.6;
-      if (kind === 2) vx += 2.4;
+      var rnd = (hash(c[0], c[1], c[2]) % 1000) / 1000;
+      var rnd2 = (hash(c[2], c[0], 7) % 1000) / 1000;
       debris.push({
         mesh: mesh,
         origin: origin.clone(),
         launched: origin.clone().addScaledVector(n, 0.42),
         pop: 0.14,
         pop0: 0.14,
-        vx: vx, vy: vy, vz: vz,
+        age: 0,
+        vx: n.x * (1.05 + rnd * 0.7) + (rnd - 0.5) * 0.45,
+        vy: 0.65 + rnd * 0.7,
+        vz: n.z * (1.05 + rnd2 * 0.7) + (rnd2 - 0.5) * 0.45,
         asleep: false
       });
+      made++;
     });
-    rebuild(part);
-    simOn = true;
-    simLeft = 2.6;
-    lastStat = NAMES[kind] + " · 这次 " + cells.length + " 块 · 物理开";
+    rebuild(hit.part);
+    window.__lastCarve = { n: cells.length, spawned: made, span: spanOf(cells), radius: radius };
+    return cells.length;
   }
 
   renderer.domElement.addEventListener("pointerdown", function (e) {
-    drag = { x: e.clientX, y: e.clientY, yaw: yaw, pitch: pitch };
-    var up = function (ev) {
-      window.removeEventListener("pointerup", up);
-      var moved = !drag || Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) > 6;
-      drag = null;
-      if (!moved) strike(ev);
-    };
-    window.addEventListener("pointerup", up);
+    if (e.button !== 0) {
+      gesture = { mode: "orbit", x: e.clientX, y: e.clientY, yaw: yaw, pitch: pitch };
+      return;
+    }
+    var hit = pickAround(e.clientX, e.clientY);
+    if (hit) gesture = { mode: "carve", x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, hit: hit, moved: false, removed: 0 };
+    else gesture = { mode: "orbit", x: e.clientX, y: e.clientY, yaw: yaw, pitch: pitch };
   });
   window.addEventListener("pointermove", function (e) {
-    if (!drag) return;
-    yaw = drag.yaw - (e.clientX - drag.x) * 0.008;
-    pitch = Math.max(0.12, Math.min(1.15, drag.pitch + (e.clientY - drag.y) * 0.006));
-    aim();
+    if (!gesture) return;
+    if (gesture.mode === "orbit") {
+      yaw = gesture.yaw - (e.clientX - gesture.x) * 0.008;
+      pitch = Math.max(0.12, Math.min(1.15, gesture.pitch + (e.clientY - gesture.y) * 0.006));
+      aim();
+      return;
+    }
+    if (Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) > 10) gesture.moved = true;
+    if (!gesture.moved) return;
+    if (Math.hypot(e.clientX - gesture.lx, e.clientY - gesture.ly) < 8) return;
+    gesture.lx = e.clientX;
+    gesture.ly = e.clientY;
+    var hit = pick(e.clientX, e.clientY);
+    if (!hit) return;
+    gesture.removed += carve(hit, SWIPE_R);
+  });
+  window.addEventListener("pointerup", function () {
+    if (!gesture) return;
+    var g = gesture;
+    gesture = null;
+    if (g.mode !== "carve") return;
+    if (!g.moved) {
+      var n = carve(g.hit, TAP_R);
+      lastStat = n ? ("点按 · 圆坑 " + n + " 块") : "没点到砖，再点墙面";
+    } else lastStat = g.removed ? ("滑动 · 沿手指 " + g.removed + " 块") : "滑动没挖到砖";
   });
   renderer.domElement.addEventListener("wheel", function (e) {
     dist = Math.max(8, Math.min(28, dist + Math.sign(e.deltaY)));
@@ -272,42 +309,83 @@
     e.preventDefault();
   }, { passive: false });
 
-  function stepPhysics(dt) {
-    if (!simOn) return;
-    simLeft -= dt;
-    var awake = false;
-    debris.forEach(function (p) {
-      if (p.asleep) return;
-      if (p.pop > 0) {
-        p.pop -= dt;
-        var u = 1 - Math.max(p.pop, 0) / p.pop0;
-        p.mesh.position.lerpVectors(p.origin, p.launched, Math.min(1, u));
-        awake = true;
-        return;
-      }
-      p.vy -= 26 * dt;
-      p.mesh.position.x += p.vx * dt;
-      p.mesh.position.y += p.vy * dt;
-      p.mesh.position.z += p.vz * dt;
-      if (p.mesh.position.y <= BH * 0.5) {
-        p.mesh.position.y = BH * 0.5;
-        p.vy = 0;
-        p.vx *= 0.45;
-        p.vz *= 0.45;
-        if (Math.hypot(p.vx, p.vz) < 0.35 || simLeft <= 0) {
-          p.vx = 0; p.vz = 0; p.asleep = true;
+  function pairPass(live) {
+    var minDist = 0.46, a, b, dx, dy, dz, d2, d, pen, nx, nz, rel, j;
+    for (a = 0; a < live.length; a++) {
+      for (b = a + 1; b < live.length; b++) {
+        dx = live[b].mesh.position.x - live[a].mesh.position.x;
+        dy = live[b].mesh.position.y - live[a].mesh.position.y;
+        dz = live[b].mesh.position.z - live[a].mesh.position.z;
+        d2 = dx * dx + dy * dy + dz * dz;
+        if (d2 >= minDist * minDist || d2 < 1e-8) continue;
+        d = Math.sqrt(d2);
+        pen = (minDist - d) * 0.5;
+        nx = dx / d; nz = dz / d;
+        live[a].mesh.position.x -= nx * pen;
+        live[a].mesh.position.z -= nz * pen;
+        live[b].mesh.position.x += nx * pen;
+        live[b].mesh.position.z += nz * pen;
+        if (live[a].mesh.position.y < BH * 0.5) live[a].mesh.position.y = BH * 0.5;
+        if (live[b].mesh.position.y < BH * 0.5) live[b].mesh.position.y = BH * 0.5;
+        rel = (live[b].vx - live[a].vx) * nx + (live[b].vz - live[a].vz) * nz;
+        if (rel < 0) {
+          j = rel * 0.5;
+          live[a].vx += j * nx; live[a].vz += j * nz;
+          live[b].vx -= j * nx; live[b].vz -= j * nz;
         }
       }
-      if (!p.asleep) awake = true;
-    });
-    if (!awake || simLeft <= 0) {
-      debris.forEach(function (p) {
-        if (p.mesh.position.y < BH * 0.5) p.mesh.position.y = BH * 0.5;
-        p.vx = 0; p.vy = 0; p.vz = 0; p.asleep = true;
-      });
-      simOn = false;
-      lastStat = lastStat.replace("物理开", "已落地，物理停");
     }
+  }
+  function stepPhysics(dt) {
+    var t0 = performance.now();
+    var maxMode = physMode === "max";
+    var sub = maxMode ? 4 : 1;
+    var h = dt / Math.max(sub, 1);
+    var i, s, p, u, speed, grounded;
+    for (i = 0; i < debris.length; i++) {
+      p = debris[i];
+      if (p.asleep) { paint(p); continue; }
+      p.age += dt;
+      if (p.pop > 0) {
+        p.pop -= dt;
+        u = 1 - Math.max(p.pop, 0) / p.pop0;
+        p.mesh.position.lerpVectors(p.origin, p.launched, Math.min(1, u));
+        paint(p);
+        continue;
+      }
+      for (s = 0; s < sub; s++) {
+        p.vy -= 26 * h;
+        p.mesh.position.x += p.vx * h;
+        p.mesh.position.y += p.vy * h;
+        p.mesh.position.z += p.vz * h;
+        if (p.mesh.position.y <= BH * 0.5) {
+          p.mesh.position.y = BH * 0.5;
+          p.vy = 0;
+          p.vx *= maxMode ? 0.62 : 0.45;
+          p.vz *= maxMode ? 0.62 : 0.45;
+        }
+      }
+      speed = Math.hypot(p.vx, p.vz);
+      grounded = p.mesh.position.y <= BH * 0.5 + 0.001;
+      if (grounded && (maxMode ? p.age > 4.8 : (speed < 0.35 || p.age > 1.2))) {
+        p.vx = 0; p.vy = 0; p.vz = 0; p.asleep = true;
+      }
+      paint(p);
+    }
+    solverPasses = 0;
+    if (maxMode) {
+      var live = [];
+      for (i = 0; i < debris.length; i++) if (!debris[i].asleep && debris[i].pop <= 0) live.push(debris[i]);
+      if (live.length > 1) {
+        while (performance.now() - t0 < 22 && solverPasses < 20000) {
+          pairPass(live);
+          solverPasses++;
+        }
+      }
+    }
+    simOn = false;
+    for (i = 0; i < debris.length; i++) if (!debris[i].asleep) simOn = true;
+    physMs = performance.now() - t0;
   }
 
   var snapshots = parts.map(function (p) { return p.solid.slice(); });
@@ -315,27 +393,67 @@
     debris.forEach(function (p) { scene.remove(p.mesh); });
     debris = []; simOn = false;
     parts.forEach(function (p, i) { p.solid = snapshots[i].slice(); rebuild(p); });
-    lastStat = "已复原。点城门再试。";
+    lastStat = "已复原。轻点挖圆坑，按住拖顺着指尖挖。";
+    window.__lastCarve = null;
   };
+  function setMode(m) {
+    physMode = m;
+    document.getElementById("mode-opt").classList.toggle("on", m === "opt");
+    document.getElementById("mode-max").classList.toggle("on", m === "max");
+  }
+  document.getElementById("mode-opt").onclick = function () { setMode("opt"); };
+  document.getElementById("mode-max").onclick = function () { setMode("max"); };
   window.addEventListener("resize", function () {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
-  var clock = new THREE.Clock();
-  function aim() {
-    var cp = Math.cos(pitch), sp = Math.sin(pitch);
-    camera.position.set(Math.sin(yaw) * dist * cp, 2.6 + sp * dist, Math.cos(yaw) * dist * cp);
-    camera.lookAt(0, 3.5, 0);
-  }
   aim();
-  (function loop() {
+  window.__project = function (x, y, z) {
+    var v = new THREE.Vector3(x, y, z).project(camera);
+    return { x: (v.x + 1) / 2 * window.innerWidth, y: (-v.y + 1) / 2 * window.innerHeight };
+  };
+  var prevT = performance.now(), fpsEma = 60, fpsShown = 0, fpsStamp = 0;
+  function bandOf(fps) {
+    if (fps < 22) return "低于 30";
+    var opts = [60, 45, 30], best = 60, bd = 1e9, i, d;
+    for (i = 0; i < opts.length; i++) {
+      d = Math.abs(fps - opts[i]);
+      if (d < bd) { bd = d; best = opts[i]; }
+    }
+    return "贴近 " + best;
+  }
+  function loop(now) {
     requestAnimationFrame(loop);
-    stepPhysics(Math.min(0.05, clock.getDelta()));
-    document.getElementById("stat").textContent = "网格会跟着洞改形 · 碎块 " + debris.length + " · " + (simOn ? "物理开" : "物理关") + " · " + lastStat;
-    window.__dbg = { tris: renderer.info.render.triangles, calls: renderer.info.render.calls };
+    var dt = Math.min(0.05, (now - prevT) / 1000);
+    prevT = now;
+    if (dt > 0.001) fpsEma = fpsEma * 0.85 + (1 / dt) * 0.15;
+    stepPhysics(dt || 0.016);
+    var activeN = 0, sleepN = 0, i;
+    for (i = 0; i < debris.length; i++) { if (debris[i].asleep) sleepN++; else activeN++; }
+    if (now - fpsStamp > 250) {
+      fpsShown = Math.round(fpsEma);
+      fpsStamp = now;
+      document.getElementById("fps").textContent = fpsShown + " 帧";
+      document.getElementById("band").textContent = bandOf(fpsShown) + " · 绿 " + activeN + " 在算 · 红 " + sleepN + " 已停";
+      document.getElementById("load").textContent = "物理 " + physMs.toFixed(1) + " ms · " + (physMode === "max" ? "吃满，上限" : "优化，下限");
+    }
+    document.getElementById("stat").textContent = lastStat + (debris.length >= CAP ? " · 碎块已满，洞还能挖" : "");
+    window.__dbg = {
+      fps: Math.round(fpsEma),
+      physMs: Math.round(physMs * 10) / 10,
+      mode: physMode,
+      active: activeN,
+      asleep: sleepN,
+      debris: debris.length,
+      passes: solverPasses,
+      tris: renderer.info.render.triangles,
+      calls: renderer.info.render.calls,
+      carve: window.__lastCarve || null
+    };
     renderer.render(scene, camera);
-  })();
+  }
+  requestAnimationFrame(loop);
 })();
 </script>
 </body>
