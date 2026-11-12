@@ -121,6 +121,7 @@
       if (!has(part, i, j, k + 1)) quad(buf, { x: x0, y: y0, z: z1 }, { x: x1, y: y0, z: z1 }, { x: x1, y: y1, z: z1 }, { x: x0, y: y1, z: z1 });
       if (!has(part, i, j, k - 1)) quad(buf, { x: x1, y: y0, z: z0 }, { x: x0, y: y0, z: z0 }, { x: x0, y: y1, z: z0 }, { x: x1, y: y1, z: z0 });
     }
+    window.__rebuilds = (window.__rebuilds || 0) + 1;
     var g = geoFrom(buf);
     if (part.mesh) { part.mesh.geometry.dispose(); part.mesh.geometry = g; }
     else {
@@ -128,6 +129,18 @@
       part.mesh.userData.part = part;
       scene.add(part.mesh);
     }
+  }
+  var dirtyParts = [];
+  function markDirty(part) {
+    var i;
+    for (i = 0; i < dirtyParts.length; i++) if (dirtyParts[i] === part) return;
+    dirtyParts.push(part);
+  }
+  function flushDirty() {
+    var n = dirtyParts.length, i;
+    for (i = 0; i < n; i++) rebuild(dirtyParts[i]);
+    dirtyParts = [];
+    return n;
   }
   var parts = [];
   function addPart(ox, oy, oz, nx, ny, nz) {
@@ -236,7 +249,7 @@
       });
       made++;
     });
-    if (made) rebuild(hit.part);
+    if (made) markDirty(hit.part);
     window.__lastCarve = { n: cells.length, spawned: made, span: spanOf(cells), radius: radius };
     return made;
   }
@@ -380,12 +393,13 @@
       if (grounded && (maxMode ? p.age > 4.8 : (speed < 0.35 || p.age > 1.2))) park(p);
     }
     live = [];
-    for (i = 0; i < debris.length; i++) if (!debris[i].asleep && debris[i].pop <= 0) live.push(debris[i]);
+    for (i = 0; i < debris.length; i++) if (!debris[i].asleep) live.push(debris[i]);
     if (!maxMode && live.length > LIVE_CAP) {
       live.sort(function (a, b) { return b.age - a.age; });
-      for (i = LIVE_CAP; i < live.length; i++) park(live[i]);
-      live.length = LIVE_CAP;
+      for (i = 0; i < live.length - LIVE_CAP; i++) park(live[i]);
     }
+    live = [];
+    for (i = 0; i < debris.length; i++) if (!debris[i].asleep && debris[i].pop <= 0) live.push(debris[i]);
     solverPasses = 0;
     if (live.length > 1) {
       if (maxMode) {
@@ -404,6 +418,7 @@
   var snapshots = parts.map(function (p) { return p.solid.slice(); });
   document.getElementById("reset").onclick = function () {
     debris = []; simOn = false;
+    dirtyParts = [];
     liveMesh.count = 0; restMesh.count = 0;
     liveMesh.instanceMatrix.needsUpdate = true;
     restMesh.instanceMatrix.needsUpdate = true;
@@ -488,6 +503,7 @@
     prevT = now;
     if (dt > 0.001) fpsEma = fpsEma * 0.85 + (1 / dt) * 0.15;
     stepPhysics(dt || 0.016);
+    var rebuilt = flushDirty();
     var activeN = 0, sleepN = 0, i;
     for (i = 0; i < debris.length; i++) { if (debris[i].asleep) sleepN++; else activeN++; }
     if (now - fpsStamp > 250) {
@@ -506,6 +522,7 @@
       asleep: sleepN,
       debris: debris.length,
       passes: solverPasses,
+      rebuilt: rebuilt,
       tris: renderer.info.render.triangles,
       calls: renderer.info.render.calls,
       liveDraw: liveMesh.count,
