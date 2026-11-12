@@ -3,39 +3,43 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>贴图城墙 · 固定破碎</title>
+<title>城门 · 3D 贴图破碎</title>
 <style>
-  html, body { margin: 0; height: 100%; background: #141311; color: #f4efe6; font: 15px/1.45 "Microsoft YaHei", "Noto Sans SC", sans-serif; }
+  html, body { margin: 0; height: 100%; background: #141311; color: #f4efe6; font: 15px/1.45 "Microsoft YaHei", "Noto Sans SC", sans-serif; overflow: hidden; }
   canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-  #note { position: fixed; left: 12px; top: 12px; max-width: min(460px, calc(100% - 24px)); background: rgba(20,19,17,.84); border-radius: 14px; padding: 12px 14px; pointer-events: none; }
+  #note { position: fixed; left: 12px; top: 12px; max-width: min(440px, calc(100% - 24px)); background: rgba(20,19,17,.84); border-radius: 14px; padding: 12px 14px; pointer-events: none; }
   h1 { font-size: 18px; margin: 0 0 4px; }
   p { margin: 0; color: #e4d8c8; }
   #stat { margin-top: 6px; }
-  #hud { position: fixed; left: 12px; right: 12px; bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  #hud { position: fixed; left: 12px; bottom: 12px; }
   button { font: inherit; border: 0; border-radius: 999px; padding: 10px 14px; background: #f4efe6; color: #1b1a17; }
 </style>
 </head>
 <body>
 <div id="note">
-  <h1>点一块，播一段固定破碎</h1>
-  <p>墙是一张贴图，不是几千块砖。点中某一格，用固定随机挑一种爆炸，再放出最多 16 块碎片。同一格每次都是同一种。</p>
+  <h1>城门这一块 · 3D</h1>
+  <p>从城镇里抽出南城门，不改原来的场景。砖缝和颗粒是贴图。点墙面，从那一格播出一种固定破碎，最多 16 块碎片。</p>
   <div id="stat"></div>
 </div>
-<div id="hud">
-  <button type="button" id="reset">复原</button>
-</div>
-<canvas id="c"></canvas>
+<div id="hud"><button type="button" id="reset">复原</button></div>
+<script src="./three.min.js"></script>
 <script>
 (function () {
   "use strict";
-  var COLS = 14, ROWS = 11, BW = 28, BH = 18, SEED = 20261112;
+  if (!window.THREE) { document.body.textContent = "缺少 three.js。"; return; }
   var NAMES = ["垂直塌落", "放射炸开", "向右滑落", "上抛再落"];
-  var canvas = document.getElementById("c");
-  var ctx = canvas.getContext("2d");
-  var broken = {};
-  var debris = [];
-  var anim = null;
-  var layout = { x: 0, y: 0, s: 1 };
+  var SEED = 20261112;
+  var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x141311);
+  var camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 80);
+  scene.add(new THREE.HemisphereLight(0xfff4e6, 0x2a2c30, 0.85));
+  var sun = new THREE.DirectionalLight(0xffffff, 1.25);
+  sun.position.set(8, 14, 6);
+  scene.add(sun);
 
   function hash(a, b, c) {
     var h = (SEED ^ (a * 374761393) ^ (b * 668265263) ^ (c * 1442695041)) >>> 0;
@@ -43,7 +47,7 @@
     h = Math.imul(h ^ (h >>> 13), 3266489917);
     return (h ^ (h >>> 16)) >>> 0;
   }
-  function rng(n) {
+  function makeRng(n) {
     var s = n >>> 0;
     return function () {
       s = (s + 0x6D2B79F5) >>> 0;
@@ -52,157 +56,190 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
-  function patternOf(c, r) { return hash(c, r, 1) % NAMES.length; }
-
-  var wall = document.createElement("canvas");
-  wall.width = COLS * BW;
-  wall.height = ROWS * BH;
-  var wctx = wall.getContext("2d");
-  function paintWall() {
-    wctx.clearRect(0, 0, wall.width, wall.height);
-    var r, c, x, y, off, shade;
-    for (r = 0; r < ROWS; r++) {
-      off = (r % 2) * (BW / 2);
-      for (c = 0; c < COLS; c++) {
-        if (broken[c + "," + r]) continue;
-        if (r > 6 && c > 5 && c < 9) continue;
-        var off = (r % 2) ? BW / 2 : 0;
-        x = c * BW + off;
-        if (x < 0 || x + BW > wall.width + 1) continue;
-        y = r * BH;
-        var door = r >= 6 && c >= 5 && c <= 8;
-        if (door) continue;
-        shade = (hash(c, r, 9) % 5) * 0.03;
-        var roof = r < 2;
-        var red = roof ? 42 : Math.round(168 - shade * 80);
-        var g = roof ? 40 : Math.round(52 - shade * 40);
-        var b = roof ? 38 : Math.round(40 - shade * 20);
-        wctx.fillStyle = "rgb(" + red + "," + g + "," + b + ")";
-        wctx.fillRect(x + 1.5, y + 1.5, BW - 3, BH - 3);
-        wctx.fillStyle = "rgba(0,0,0,.28)";
-        wctx.fillRect(x + 1.5, y + BH - 3.5, BW - 3, 2);
-        wctx.fillStyle = roof ? "#6a655c" : "#e7c9a2";
-        var studs = roof ? 2 : 2;
-        for (var s = 0; s < studs; s++) {
-          wctx.beginPath();
-          wctx.ellipse(x + 8 + s * 12, y + 5, 3.2, 2.2, 0, 0, Math.PI * 2);
-          wctx.fill();
+  function brickTexture(top) {
+    var c = document.createElement("canvas");
+    c.width = 256; c.height = 256;
+    var g = c.getContext("2d");
+    g.fillStyle = "#1a1816";
+    g.fillRect(0, 0, 256, 256);
+    var cols = 4, rows = 8, bw = 256 / cols, bh = 256 / rows, r, i, off, shade;
+    for (r = 0; r < rows; r++) {
+      off = (r % 2) * (bw / 2);
+      for (i = -1; i < cols + 1; i++) {
+        shade = ((r * 3 + i * 5) % 5) * 6;
+        g.fillStyle = top ? "rgb(" + (196 - shade) + "," + (168 - shade) + ",118)" : "rgb(" + (176 - shade) + "," + (58 - shade / 3) + "," + (48) + ")";
+        g.fillRect(i * bw + off + 2, r * bh + 2, bw - 4, bh - 4);
+        g.fillStyle = "rgba(0,0,0,.35)";
+        g.fillRect(i * bw + off + 2, r * bh + bh - 4, bw - 4, 2);
+        if (top) {
+          g.fillStyle = "#f0d7ad";
+          g.beginPath();
+          g.ellipse(i * bw + off + bw / 2, r * bh + bh / 2, bw * 0.22, bh * 0.28, 0, 0, Math.PI * 2);
+          g.fill();
         }
       }
     }
+    var tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    return tex;
+  }
+  var sideTex = brickTexture(false);
+  var topTex = brickTexture(true);
+  function mats(w, h, d) {
+    var side = new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.48, metalness: 0 });
+    var top = new THREE.MeshStandardMaterial({ map: topTex, roughness: 0.42, metalness: 0 });
+    var bottom = new THREE.MeshStandardMaterial({ color: 0x3a332c, roughness: 0.8 });
+    side.map = sideTex.clone();
+    side.map.wrapS = side.map.wrapT = THREE.RepeatWrapping;
+    side.map.repeat.set(Math.max(w, d) / 1.1, h / 0.72);
+    top.map = topTex.clone();
+    top.map.wrapS = top.map.wrapT = THREE.RepeatWrapping;
+    top.map.repeat.set(w / 0.55, d / 0.55);
+    return [side, side, top, bottom, side, side];
+  }
+  function box(w, h, d, x, y, z) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mats(w, h, d));
+    m.position.set(x, y, z);
+    m.userData.solid = true;
+    return m;
   }
 
-  function cellAt(px, py) {
-    var x = (px - layout.x) / layout.s;
-    var y = (py - layout.y) / layout.s;
-    if (x < 0 || y < 0 || x >= wall.width || y >= wall.height) return null;
-    var r = Math.floor(y / BH);
-    var off = (r % 2) ? BW / 2 : 0;
-    var c = Math.floor((x - off) / BW);
-    if (c < 0 || r < 0 || c >= COLS || r >= ROWS) return null;
-    if (r >= 6 && c >= 5 && c <= 8) return null;
-    if (broken[c + "," + r]) return null;
-    return { c: c, r: r };
-  }
+  /* 南城门：宽 8、深 4.4、高 7.2，门洞宽 4.6、通行高约 4.46。只这一块。 */
+  var gate = new THREE.Group();
+  var pierW = 1.7, depth = 4.4, height = 7.2, opening = 4.6, passage = 4.46;
+  gate.add(box(pierW, height, depth, -opening / 2 - pierW / 2, height / 2, 0));
+  gate.add(box(pierW, height, depth, opening / 2 + pierW / 2, height / 2, 0));
+  gate.add(box(opening, height - passage, depth, 0, passage + (height - passage) / 2, 0));
+  gate.add(box(8.6, 0.7, 5.2, 0, height + 0.28, 0));
+  scene.add(gate);
+  var ground = new THREE.Mesh(new THREE.BoxGeometry(16, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0x2c3328, roughness: 0.9 }));
+  ground.position.y = -0.1;
+  scene.add(ground);
 
-  function bake(cell) {
-    var kind = patternOf(cell.c, cell.r);
-    var rand = rng(hash(cell.c, cell.r, kind + 3));
+  var yaw = 0.7, pitch = 0.42, dist = 16, drag = null;
+  function aim() {
+    var cp = Math.cos(pitch), sp = Math.sin(pitch);
+    camera.position.set(Math.sin(yaw) * dist * cp, 2.2 + sp * dist, Math.cos(yaw) * dist * cp);
+    camera.lookAt(0, 3.2, 0);
+  }
+  renderer.domElement.addEventListener("pointerdown", onDown);
+  window.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    yaw = drag.yaw - (e.clientX - drag.x) * 0.008;
+    pitch = Math.max(0.15, Math.min(1.15, drag.pitch + (e.clientY - drag.y) * 0.006));
+    aim();
+  });
+  renderer.domElement.addEventListener("wheel", function (e) {
+    dist = Math.max(8, Math.min(28, dist + Math.sign(e.deltaY)));
+    aim(); e.preventDefault();
+  }, { passive: false });
+
+  var ray = new THREE.Raycaster();
+  var debris = [];
+  var scars = [];
+  var anim = null;
+  var chipGeo = new THREE.BoxGeometry(0.5, 0.32, 0.36);
+  var chipMat = new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.48 });
+
+  function onDown(e) {
+    if (e.target !== renderer.domElement) return;
+    drag = { x: e.clientX, y: e.clientY, yaw: yaw, pitch: pitch, moved: false };
+    var up = function (ev) {
+      window.removeEventListener("pointerup", up);
+      var moved = Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) > 6;
+      drag = null;
+      if (!moved) strike(ev);
+    };
+    window.addEventListener("pointerup", up);
+  }
+  function strike(e) {
+    if (anim) return;
+    var rect = renderer.domElement.getBoundingClientRect();
+    var ndc = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    );
+    ray.setFromCamera(ndc, camera);
+    var hits = ray.intersectObjects(gate.children, false);
+    if (!hits.length) return;
+    var hit = hits[0];
+    var n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize();
+    var cell = new THREE.Vector3(Math.round(hit.point.x * 2), Math.round(hit.point.y * 2), Math.round(hit.point.z * 2));
+    var kind = hash(cell.x, cell.y, cell.z) % NAMES.length;
+    var rand = makeRng(hash(cell.x, cell.y, kind + 7));
+    var tangent = new THREE.Vector3(n.z, 0, -n.x);
+    if (tangent.lengthSq() < 0.01) tangent.set(1, 0, 0);
+    tangent.normalize();
+    var bitangent = new THREE.Vector3().crossVectors(n, tangent).normalize();
+    var spots = [];
+    var i, j;
+    if (kind === 0) for (i = 0; i < 4; i++) spots.push([0, -i * 0.55]);
+    else if (kind === 1) for (j = -1; j <= 1; j++) for (i = -1; i <= 1; i++) spots.push([i * 0.55, j * 0.45]);
+    else if (kind === 2) for (i = 0; i < 4; i++) spots.push([i * 0.55, 0]);
+    else for (i = 0; i < 3; i++) spots.push([0, i * 0.5]);
     var pieces = [];
-    var list = [];
-    var dc, dr, i;
-    if (kind === 0) for (i = 0; i < 4; i++) list.push([cell.c, cell.r + i]);
-    else if (kind === 1) {
-      for (dr = -1; dr <= 1; dr++) for (dc = -1; dc <= 1; dc++) list.push([cell.c + dc, cell.r + dr]);
-    } else if (kind === 2) for (i = 0; i < 4; i++) list.push([cell.c + i, cell.r]);
-    else for (i = 0; i < 3; i++) list.push([cell.c, cell.r - i]);
-    for (i = 0; i < list.length && pieces.length < 16; i++) {
-      dc = list[i][0]; dr = list[i][1];
-      if (dc < 0 || dr < 0 || dc >= COLS || dr >= ROWS) continue;
-      if (dr >= 6 && dc >= 5 && dc <= 8) continue;
-      if (broken[dc + "," + dr]) continue;
-      var jx = (rand() - 0.5) * 36;
-      var off = (dr % 2) ? BW / 2 : 0;
-      var sx = layout.x + (dc * BW + off + BW / 2) * layout.s;
-      var sy = layout.y + (dr * BH + BH / 2) * layout.s;
-      var ex = sx, ey = sy, mx = sx, my = sy;
-      if (kind === 0) { ex = sx + jx; ey = sy + 160 + rand() * 40; mx = sx + jx * 0.3; my = sy + 30; }
-      else if (kind === 1) { ex = sx + (dc - cell.c) * 70 + jx; ey = sy + 90 + Math.abs(dr - cell.r) * 20; mx = sx + (dc - cell.c) * 90; my = sy - 36; }
-      else if (kind === 2) { ex = sx + 130; ey = sy + 50 + rand() * 30; mx = sx + 70; my = sy - 10; }
-      else { ex = sx + jx; ey = sy + 140; mx = sx + jx; my = sy - 70; }
-      pieces.push({ c: dc, r: dr, sx: sx, sy: sy, mx: mx, my: my, ex: ex, ey: ey, rot: (rand() - 0.5) * 2.2, delay: pieces.length * 0.04 });
-      broken[dc + "," + dr] = 1;
+    for (i = 0; i < spots.length && pieces.length < 16; i++) {
+      var start = hit.point.clone()
+        .addScaledVector(tangent, spots[i][0])
+        .addScaledVector(bitangent, spots[i][1])
+        .addScaledVector(n, 0.2);
+      var end = start.clone();
+      var mid = start.clone();
+      var jx = (rand() - 0.5) * 0.8;
+      if (kind === 0) { end.addScaledVector(n, 0.4).add(new THREE.Vector3(jx, -start.y - 0.2, 0)); mid.add(new THREE.Vector3(jx * 0.2, -0.4, 0)); }
+      else if (kind === 1) { end.addScaledVector(tangent, spots[i][0] * 2.2).addScaledVector(bitangent, spots[i][1] * 1.4).addScaledVector(n, 1.4); mid.copy(end).addScaledVector(n, 0.8).setY(start.y + 0.6); }
+      else if (kind === 2) { end.addScaledVector(tangent, 2.4).add(new THREE.Vector3(0, -1.2, 0)); mid.addScaledVector(tangent, 1.1).addScaledVector(n, 0.4); }
+      else { end.add(new THREE.Vector3(jx, -start.y + 0.2, 0)).addScaledVector(n, 0.3); mid.addScaledVector(n, 0.8).setY(start.y + 1.3); }
+      var mesh = new THREE.Mesh(chipGeo, chipMat);
+      mesh.position.copy(start);
+      scene.add(mesh);
+      pieces.push({ mesh: mesh, s: start, m: mid, e: end, rot: (rand() - 0.5) * 3, delay: pieces.length * 0.04 });
     }
-    paintWall();
-    return { kind: kind, name: NAMES[kind], pieces: pieces, t0: performance.now(), dur: 900 };
+    var scar = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.7, 0.08), new THREE.MeshStandardMaterial({ color: 0x1a1816 }));
+    scar.position.copy(hit.point).addScaledVector(n, 0.02);
+    scar.lookAt(hit.point.clone().add(n));
+    scene.add(scar);
+    scars.push(scar);
+    anim = { name: NAMES[kind], pieces: pieces, t0: performance.now(), dur: 900 };
+    debris = debris.concat(pieces);
   }
-
   function bez(p, u) {
     var a = 1 - u;
-    return {
-      x: a * a * p.sx + 2 * a * u * p.mx + u * u * p.ex,
-      y: a * a * p.sy + 2 * a * u * p.my + u * u * p.ey,
-      rot: p.rot * u
-    };
+    return new THREE.Vector3(
+      a * a * p.s.x + 2 * a * u * p.m.x + u * u * p.e.x,
+      a * a * p.s.y + 2 * a * u * p.m.y + u * u * p.e.y,
+      a * a * p.s.z + 2 * a * u * p.m.z + u * u * p.e.z
+    );
   }
-
-  function resize() {
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.floor(canvas.clientWidth * dpr);
-    canvas.height = Math.floor(canvas.clientHeight * dpr);
-    var margin = Math.min(canvas.width, canvas.height) * 0.12;
-    var s = Math.min((canvas.width - margin * 2) / wall.width, (canvas.height - margin * 2) / (wall.height + 80));
-    layout.s = s;
-    layout.x = (canvas.width - wall.width * s) / 2;
-    layout.y = (canvas.height - wall.height * s) / 2 - 10 * dpr;
-  }
-
-  function draw() {
-    resize();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = "#141311";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#2c3328";
-    ctx.fillRect(layout.x - 18, layout.y + wall.height * layout.s - 6, wall.width * layout.s + 36, 28);
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(wall, layout.x, layout.y, wall.width * layout.s, wall.height * layout.s);
-    var now = performance.now();
-    if (anim) {
-      var elapsed = (now - anim.t0) / anim.dur;
-      anim.pieces.forEach(function (p) {
-        var u = Math.max(0, Math.min(1, (elapsed - p.delay) / 0.72));
-        var q = bez(p, u);
-        ctx.save();
-        ctx.translate(q.x, q.y);
-        ctx.rotate(q.rot);
-        ctx.fillStyle = "#bd3c2e";
-        ctx.fillRect(-layout.s * BW / 2, -layout.s * BH / 2, layout.s * (BW - 4), layout.s * (BH - 4));
-        ctx.fillStyle = "#e7c9a2";
-        ctx.beginPath();
-        ctx.ellipse(-6, -layout.s * BH / 2 + 6, 3, 2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      });
-      if (elapsed > 1.15) anim = null;
-    }
-    var left = COLS * ROWS;
-    Object.keys(broken).forEach(function () { left--; });
-    var label = anim ? ("正在播：" + anim.name + " · 碎片 " + anim.pieces.length) : "点墙面上的一格";
-    document.getElementById("stat").textContent = "贴图 1 张 · 还在的格子 " + left + " · " + label;
-    requestAnimationFrame(draw);
-  }
-
-  canvas.addEventListener("pointerdown", function (e) {
-    if (anim) return;
-    var rect = canvas.getBoundingClientRect();
-    var dpr = canvas.width / rect.width;
-    var cell = cellAt((e.clientX - rect.left) * dpr, (e.clientY - rect.top) * dpr);
-    if (!cell) return;
-    anim = bake(cell);
+  document.getElementById("reset").onclick = function () {
+    debris.forEach(function (p) { scene.remove(p.mesh); });
+    scars.forEach(function (s) { scene.remove(s); });
+    debris = []; scars = []; anim = null;
+  };
+  window.addEventListener("resize", function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
   });
-  document.getElementById("reset").onclick = function () { broken = {}; anim = null; paintWall(); };
-  paintWall();
-  draw();
+  aim();
+  (function loop() {
+    requestAnimationFrame(loop);
+    if (anim) {
+      var elapsed = (performance.now() - anim.t0) / anim.dur;
+      anim.pieces.forEach(function (p) {
+        var u = Math.max(0, Math.min(1, (elapsed - p.delay) / 0.75));
+        p.mesh.position.copy(bez(p, u));
+        p.mesh.rotation.z = p.rot * u;
+        p.mesh.rotation.x = p.rot * u * 0.6;
+      });
+      if (elapsed > 1.2) anim = null;
+    }
+    var label = anim ? ("正在播：" + anim.name + " · 碎片 " + anim.pieces.length) : "点城门表面";
+    document.getElementById("stat").textContent = "城门 4 块网格 · 贴图 2 张 · " + label;
+    renderer.render(scene, camera);
+  })();
 })();
 </script>
 </body>
