@@ -156,7 +156,7 @@
   })();
 
   var yaw = 0.78, pitch = 0.36, dist = 16, gesture = null;
-  var TAP_R = 2.55, SWIPE_R = 2.2, MAX_BRICKS = 2048;
+  var TAP_R = 2.55, SWIPE_R = 2.2, MAX_BRICKS = 2048, LIVE_CAP = 48;
   var physMode = "opt", physMs = 0, solverPasses = 0;
   function aim() {
     var cp = Math.cos(pitch), sp = Math.sin(pitch);
@@ -381,6 +381,11 @@
     }
     live = [];
     for (i = 0; i < debris.length; i++) if (!debris[i].asleep && debris[i].pop <= 0) live.push(debris[i]);
+    if (!maxMode && live.length > LIVE_CAP) {
+      live.sort(function (a, b) { return b.age - a.age; });
+      for (i = LIVE_CAP; i < live.length; i++) park(live[i]);
+      live.length = LIVE_CAP;
+    }
     solverPasses = 0;
     if (live.length > 1) {
       if (maxMode) {

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>手机预算 · 碎片、布娃娃、粒子</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #141311; color: #f4efe6; font: 15px/1.45 "Microsoft YaHei", "Noto Sans SC", sans-serif; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #note, #perf { position: fixed; z-index: 2; background: rgba(20,19,17,.9); border-radius: 14px; padding: 12px 14px; }
+  #note { left: 12px; top: 12px; max-width: min(420px, calc(100% - 24px)); pointer-events: none; }
+  #perf { right: 12px; bottom: 12px; width: min(320px, calc(100% - 24px)); }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p { margin: 0; color: #e4d8c8; }
+  #fps { font-size: 28px; font-weight: 700; }
+  button { font: inherit; border: 0; border-radius: 999px; padding: 8px 12px; margin: 6px 6px 0 0; background: transparent; color: #f4efe6; box-shadow: inset 0 0 0 1px #f4efe6; }
+  button.on { background: #f4efe6; color: #1b1a17; }
+</style>
+</head>
+<body>
+<div id="note">
+  <h1>手机预算这一场</h1>
+  <p>不是城门。优化档：1 次子步。碎片用空间哈希 1 遍，醒着最多 48。布娃娃是距离约束，迭代 2 或 4，和砖的哈希不是同一行。粒子没有碰撞。</p>
+  <div id="stat"></div>
+</div>
+<div id="perf">
+  <div id="fps">-- 帧</div>
+  <p id="band">取样中</p>
+  <p id="load">物理 -- ms</p>
+  <div>
+    <button type="button" id="b-lower">下限场面</button>
+    <button type="button" id="b-bricks">碎片 48</button>
+    <button type="button" id="b-dolls">布娃娃 6</button>
+    <button type="button" id="b-parts">粒子 96</button>
+    <button type="button" id="b-upper">上限一起</button>
+  </div>
+</div>
+<script src="../break/three.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  if (!window.THREE) { document.body.textContent = "缺少 three.js。"; return; }
+  var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x141311);
+  var camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 80);
+  camera.position.set(8, 7, 11);
+  camera.lookAt(0, 1.2, 0);
+  scene.add(new THREE.HemisphereLight(0xfff4e6, 0x2a2c30, 0.9));
+  var sun = new THREE.DirectionalLight(0xffffff, 1.1);
+  sun.position.set(6, 10, 4);
+  scene.add(sun);
+  scene.add(new THREE.Mesh(new THREE.BoxGeometry(16, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0x2c3328 })));
+
+  var brickGeo = new THREE.BoxGeometry(0.42, 0.36, 0.42);
+  var boneGeo = new THREE.BoxGeometry(0.18, 0.42, 0.18);
+  var partGeo = new THREE.SphereGeometry(0.08, 6, 4);
+  var matLive = new THREE.MeshStandardMaterial({ color: 0x3ecf6e, roughness: 0.45 });
+  var matRest = new THREE.MeshStandardMaterial({ color: 0xe04545, roughness: 0.45 });
+  var matBone = new THREE.MeshStandardMaterial({ color: 0xd7c4a3, roughness: 0.55 });
+  var matPart = new THREE.MeshStandardMaterial({ color: 0xe7b56a, roughness: 0.4 });
+  var LIVE_CAP = 48;
+  var bricks = new THREE.InstancedMesh(brickGeo, matLive, 48);
+  var parked = new THREE.InstancedMesh(brickGeo, matRest, 256);
+  var bones = new THREE.InstancedMesh(boneGeo, matBone, 64);
+  var sparks = new THREE.InstancedMesh(partGeo, matPart, 96);
+  [bricks, parked, bones, sparks].forEach(function (m) { m.count = 0; m.frustumCulled = false; scene.add(m); });
+  var dummy = new THREE.Object3D();
+  function put(mesh, i, x, y, z) {
+    dummy.position.set(x, y, z);
+    dummy.rotation.set(0, 0, 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+
+  var debris = [], dolls = [], parts = [], mode = "lower";
+  var physMs = 0, solverIters = 2, hashPasses = 1;
+
+  function spawnBricks(n) {
+    var i, awake = 0;
+    for (i = 0; i < n; i++) {
+      var rec = {
+        x: (i % 8) * 0.48 - 1.6,
+        y: 1.2 + Math.floor(i / 8) * 0.42,
+        z: (i % 3) * 0.48 - 0.5,
+        vx: ((i * 17) % 7) * 0.05 - 0.15,
+        vy: 0.4,
+        vz: ((i * 9) % 5) * 0.04,
+        asleep: awake >= LIVE_CAP
+      };
+      if (!rec.asleep) awake++;
+      debris.push(rec);
+    }
+  }
+  function boneList(count) {
+    var spec = [
+      [0, 1.3, 0],
+      [0, 1.75, 0],
+      [-0.38, 1.25, 0],
+      [0.38, 1.25, 0],
+      [-0.16, 0.85, 0],
+      [0.16, 0.85, 0],
+      [-0.62, 1.05, 0],
+      [0.62, 1.05, 0],
+      [-0.16, 0.45, 0],
+      [0.16, 0.45, 0]
+    ];
+    var parent = [-1, 0, 0, 0, 0, 0, 2, 3, 4, 5];
+    var out = [], i;
+    for (i = 0; i < count; i++) out.push({ x: spec[i][0], y: spec[i][1], z: spec[i][2], parent: parent[i] });
+    return out;
+  }
+  function spawnDolls(n, boneCount) {
+    var d, b, list, ox;
+    for (d = 0; d < n; d++) {
+      ox = -2.2 + d * 0.9;
+      list = boneList(boneCount);
+      for (b = 0; b < list.length; b++) list[b].x += ox;
+      dolls.push(list);
+    }
+  }
+  function spawnParts(n) {
+    var i;
+    for (i = 0; i < n; i++) {
+      parts.push({
+        x: (i % 12) * 0.22 - 1.2,
+        y: 2.2 + (i % 5) * 0.15,
+        z: Math.floor(i / 12) * 0.22,
+        vx: ((i % 5) - 2) * 0.3,
+        vy: 1.2,
+        vz: 0.2,
+        life: 1.4
+      });
+    }
+  }
+  function clearAll() {
+    debris = []; dolls = []; parts = [];
+    bricks.count = parked.count = bones.count = sparks.count = 0;
+  }
+  function load(name) {
+    clearAll();
+    mode = name;
+    solverIters = 2;
+    hashPasses = 1;
+    if (name === "lower") { spawnBricks(12); spawnDolls(1, 6); spawnParts(24); solverIters = 2; }
+    else if (name === "bricks") { spawnBricks(60); }
+    else if (name === "dolls") { spawnDolls(6, 10); solverIters = 4; }
+    else if (name === "parts") { spawnParts(96); }
+    else { spawnBricks(48); spawnDolls(6, 10); spawnParts(96); solverIters = 4; }
+    document.querySelectorAll("#perf button").forEach(function (b) { b.classList.remove("on"); });
+    var map = { lower: "b-lower", bricks: "b-bricks", dolls: "b-dolls", parts: "b-parts", upper: "b-upper" };
+    var el = document.getElementById(map[name]);
+    if (el) el.classList.add("on");
+  }
+
+  function hashPass() {
+    var bins = Object.create(null), i, a, key, list, j, dx, dz, d2, d, pen, nx, nz;
+    var live = [];
+    for (i = 0; i < debris.length; i++) if (!debris[i].asleep) live.push(debris[i]);
+    for (i = 0; i < live.length; i++) {
+      key = Math.floor(live[i].x * 2) + "," + Math.floor(live[i].z * 2);
+      (bins[key] || (bins[key] = [])).push(live[i]);
+    }
+    Object.keys(bins).forEach(function (k) {
+      list = bins[k];
+      for (a = 0; a < list.length; a++) for (j = a + 1; j < list.length; j++) {
+        dx = list[j].x - list[a].x; dz = list[j].z - list[a].z;
+        d2 = dx * dx + dz * dz;
+        if (d2 >= 0.46 * 0.46 || d2 < 1e-8) continue;
+        d = Math.sqrt(d2); pen = (0.46 - d) * 0.5; nx = dx / d; nz = dz / d;
+        list[a].x -= nx * pen; list[a].z -= nz * pen;
+        list[j].x += nx * pen; list[j].z += nz * pen;
+      }
+    });
+  }
+  function solveDoll(list) {
+    var it, i, p, dx, dy, dz, dist, rest, diff, ox, oy, oz;
+    for (it = 0; it < solverIters; it++) {
+      for (i = 0; i < list.length; i++) {
+        if (list[i].parent < 0) continue;
+        p = list[list[i].parent];
+        dx = list[i].x - p.x; dy = list[i].y - p.y; dz = list[i].z - p.z;
+        dist = Math.hypot(dx, dy, dz) || 1;
+        rest = 0.42;
+        diff = (dist - rest) / dist * 0.5;
+        ox = dx * diff; oy = dy * diff; oz = dz * diff;
+        list[i].x -= ox; list[i].y -= oy; list[i].z -= oz;
+        p.x += ox; p.y += oy; p.z += oz;
+        if (list[i].y < 0.21) list[i].y = 0.21;
+        if (p.y < 0.21) p.y = 0.21;
+      }
+    }
+  }
+  function step(dt) {
+    var t0 = performance.now();
+    var i, b, p, pass;
+    for (i = 0; i < debris.length; i++) {
+      p = debris[i];
+      if (p.asleep) continue;
+      p.vy -= 26 * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+      if (p.y <= 0.2) { p.y = 0.2; p.vy = 0; p.vx *= 0.45; p.vz *= 0.45; }
+    }
+    for (pass = 0; pass < hashPasses; pass++) hashPass();
+    for (b = 0; b < dolls.length; b++) {
+      for (i = 0; i < dolls[b].length; i++) dolls[b][i].y -= 26 * dt * dt;
+      solveDoll(dolls[b]);
+    }
+    for (i = parts.length - 1; i >= 0; i--) {
+      p = parts[i];
+      p.life -= dt;
+      p.vy -= 12 * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+      if (p.life <= 0 || p.y < 0.08) parts.splice(i, 1);
+    }
+    return performance.now() - t0;
+  }
+  function draw() {
+    var i, n = 0, r = 0, b = 0, s = 0, d, k;
+    for (i = 0; i < debris.length; i++) {
+      d = debris[i];
+      if (d.asleep) { put(parked, r++, d.x, d.y, d.z); }
+      else put(bricks, n++, d.x, d.y, d.z);
+    }
+    bricks.count = n; parked.count = r;
+    bricks.instanceMatrix.needsUpdate = parked.instanceMatrix.needsUpdate = true;
+    for (i = 0; i < dolls.length; i++) for (k = 0; k < dolls[i].length; k++) {
+      put(bones, b++, dolls[i][k].x, dolls[i][k].y, dolls[i][k].z);
+    }
+    bones.count = b; bones.instanceMatrix.needsUpdate = true;
+    for (i = 0; i < parts.length && s < 96; i++) put(sparks, s++, parts[i].x, parts[i].y, parts[i].z);
+    sparks.count = s; sparks.instanceMatrix.needsUpdate = true;
+    return { awake: n, parked: r, bones: b, parts: s, dolls: dolls.length, iters: solverIters };
+  }
+
+  document.getElementById("b-lower").onclick = function () { load("lower"); };
+  document.getElementById("b-bricks").onclick = function () { load("bricks"); };
+  document.getElementById("b-dolls").onclick = function () { load("dolls"); };
+  document.getElementById("b-parts").onclick = function () { load("parts"); };
+  document.getElementById("b-upper").onclick = function () { load("upper"); };
+  load("lower");
+
+  var prev = performance.now(), fpsEma = 60, stamp = 0;
+  function loop(now) {
+    requestAnimationFrame(loop);
+    var dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+    if (dt > 0.001) fpsEma = fpsEma * 0.85 + (1 / dt) * 0.15;
+    physMs = step(dt || 0.016);
+    var info = draw();
+    if (now - stamp > 250) {
+      stamp = now;
+      document.getElementById("fps").textContent = Math.round(fpsEma) + " 帧";
+      document.getElementById("band").textContent = mode + " · 醒着砖 " + info.awake + " · 已停 " + info.parked + " · 骨头 " + info.bones + " · 粒子 " + info.parts;
+      document.getElementById("load").textContent = "物理 " + physMs.toFixed(2) + " ms · 子步 1 · 布娃娃迭代 " + info.iters + " · 绘制 " + renderer.info.render.calls;
+      document.getElementById("stat").textContent = "碎片哈希 1 遍。超过 48 的砖直接停住。";
+    }
+    window.__dbg = { fps: Math.round(fpsEma), physMs: Math.round(physMs * 100) / 100, mode: mode, awake: info.awake, parked: info.parked, bones: info.bones, parts: info.parts, dolls: info.dolls, iters: info.iters, calls: renderer.info.render.calls };
+    renderer.render(scene, camera);
+  }
+  window.__case = function (name) {
+    load(name);
+    var samples = [], i, info;
+    for (i = 0; i < 30; i++) {
+      samples.push(step(1 / 60));
+      info = draw();
+    }
+    samples.sort(function (a, b) { return a - b; });
+    return { name: name, medianMs: Math.round(samples[15] * 100) / 100, maxMs: Math.round(samples[29] * 100) / 100, awake: info.awake, parked: info.parked, bones: info.bones, parts: info.parts, dolls: info.dolls, iters: info.iters };
+  };
+  requestAnimationFrame(loop);
+  window.addEventListener("resize", function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>
