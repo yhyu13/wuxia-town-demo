@@ -1,0 +1,40 @@
+{
+ "ok": true,
+ "id": "2026-11-17",
+ "seed": 20260818,
+ "who": {
+  "id": "role-225",
+  "name": "杨惊鸿",
+  "role": "wanderer"
+ },
+ "action": "detour",
+ "target": {
+  "id": "c-inn",
+  "name": "客栈"
+ },
+ "clock": {
+  "fromTotal": 1080,
+  "toTotal": 1560,
+  "from": "第1天 18:00",
+  "to": "第2天 02:00"
+ },
+ "summary": "杨惊鸿留下了，绕到客栈走了半个时辰。时钟从 第1天 18:00 到 第2天 02:00。种子不变。",
+ "candidateId": "candidate:e2a4004d3ee8d85bfc508db09f88a2e33ad5d2bddedebec5d9d57e9895735314",
+ "eventId": "e2a4004d3ee8d85bfc508db09f88a2e33ad5d2bddedebec5d9d57e9895735314:0",
+ "ruleVersion": "night-detour-v1",
+ "director": {
+  "mode": "rule",
+  "llm": false,
+  "model": "rule-v1",
+  "tokens": 0,
+  "fallback": true,
+  "fallbackReason": "LLM 未接入：本轮为规则回执"
+ },
+ "latencyMs": 9825,
+ "reversible": true,
+ "screenshot": "receipts/2026-11-17.png",
+ "createdAt": "2026-11-17T16:37:16+08:00",
+ "host": "DESKTOP-QE51K9H",
+ "sha256": "eac4ff258855698f451b1b985f12ebcaff5b146057ba48170c6c7c18fdb66217",
+ "nightSha256": "dbe86f83c5d372a6d13a79feaa3829eeb9b474a91b141ea740c85d80f64b7c4f"
+}
