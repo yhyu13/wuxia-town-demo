@@ -30,11 +30,11 @@
   "fallback": true,
   "fallbackReason": "LLM 未接入：本轮为规则回执"
  },
- "latencyMs": 9825,
+ "latencyMs": 7892,
  "reversible": true,
  "screenshot": "receipts/2026-11-17.png",
- "createdAt": "2026-11-17T16:37:16+08:00",
+ "createdAt": "2026-11-17T16:40:07+08:00",
  "host": "DESKTOP-QE51K9H",
- "sha256": "eac4ff258855698f451b1b985f12ebcaff5b146057ba48170c6c7c18fdb66217",
+ "sha256": "129a0f68441e8978df4ed49e9f7ab9c3adb1f42ad0c0d9e8253582cf47436226",
  "nightSha256": "dbe86f83c5d372a6d13a79feaa3829eeb9b474a91b141ea740c85d80f64b7c4f"
 }
