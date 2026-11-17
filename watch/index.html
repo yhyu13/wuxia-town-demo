@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>武侠小镇 · 3 分钟演示</title>
+<style>
+:root{--ink:#1b1815;--muted:#6a6058;--line:#e5ded4;--paper:#faf7f2;--card:#fff;--accent:#8a5a2b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 "Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:0 18px 60px}
+header{background:linear-gradient(155deg,#f7efe4,#fff 60%,#f2ede4);border-bottom:1px solid var(--line);padding:30px 0 20px;margin-bottom:20px}
+h1{font-size:25px;margin:0 0 4px}
+.meta{color:var(--muted);font-size:13px}
+video{width:100%;border-radius:10px;border:1px solid var(--line);background:#000}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}
+td,th{border:1px solid var(--line);padding:6px 8px;text-align:left}
+th{background:#f6f1e9;white-space:nowrap}
+a{color:var(--accent)}
+footer{margin-top:30px;border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--muted)}
+</style></head><body>
+<header><div class="wrap">
+<h1>武侠小镇 · 3 分钟演示</h1>
+<p class="meta">1 分 29 秒 · 1280×720 · 中文旁白 · 真实点击，无剪辑拼接<br>
+无登录、无需下载，直接播放</p>
+</div></header>
+<div class="wrap">
+<video controls preload="metadata" poster="./poster.jpg">
+  <source src="./demo.mp4" type="video/mp4">
+  你的浏览器不支持 video，可直接下载：<a href="./demo.mp4">demo.mp4</a>
+</video>
+
+<div class="card">
+<table>
+<tr><th>时间</th><th>画面</th></tr>
+<tr><td>0:00</td><td>乐高沙盘，240 人，18:00</td></tr>
+<tr><td>0:07</td><td>把时间拖到夜里，点「不在场」</td></tr>
+<tr><td>0:15</td><td>候选弹窗：谁、去哪、时钟</td></tr>
+<tr><td>0:23</td><td>划走，回到离开前</td></tr>
+<tr><td>0:31</td><td>再点一次，留下这一夜</td></tr>
+<tr><td>0:39</td><td>第二天早上，拖人：百姓会飞、武侠按住不动</td></tr>
+<tr><td>0:47</td><td>推倒北墙、结成武林盟</td></tr>
+<tr><td>0:55</td><td>最小工作台：入口卡与定时流程</td></tr>
+<tr><td>1:03</td><td>回执卡：谁、去哪、时钟、截图、模型、指纹</td></tr>
+<tr><td>1:12</td><td>边界与撤回</td></tr>
+</table>
+</div>
+
+<div class="card">
+<p><b>旁白全文</b></p>
+<p style="font-size:13.5px">这是武侠小镇。白天它是一座乐高沙盘，二百四十个人各有各的作息；晚上，它会自己过夜。
+把时间拖到夜里，点一下不在场。你离开的这八小时，世界不会停。
+它先给你一句话：谁，绕到哪，时钟从几点走到几点。旧世界不动，你还能反悔。
+划走，就回到离开前；再点一次，它换一条命运，因为上一次的结果会被排除。
+留下，世界线就变了：这个人会在第四天零点，走到客栈东侧的那个站位点。
+人群不是贴图。百姓可以拖，守卫会飞会倒，武侠按住不动；拖动之后位置会锁住。
+推倒北墙，结成武林盟，一天结束时按守卫算胜负，不按百姓死活算。
+每天二十二点，工作台自动跑一夜，把结果写成一张回执，失败会重试一次。
+早上你只看到这一屏：谁、去哪、时钟、截图、模型和 token、夜间指纹。
+错了就划走撤回。这是可运行原型，完整判断、边界和证伪条件，写在说明书里。</p>
+</div>
+
+<div class="card">
+<p><b>相关链接</b></p>
+<p>可运行产品：<a href="https://yhyu13.github.io/wuxia-town-demo/play/">/play/</a> ·
+工作台：<a href="https://yhyu13.github.io/wuxia-town-demo/reports/workbench/">/reports/workbench/</a> ·
+说明书：<a href="https://yhyu13.github.io/wuxia-town-demo/proposal/">/proposal/</a> ·
+报告存档：<a href="https://yhyu13.github.io/wuxia-town-demo/reports/">/reports/</a></p>
+<p class="meta">说明：视频里的回执是规则回执（model=rule-v1、tokens=0、fallback=true）。模型接入后替换同一条链路，不重录旁白。</p>
+</div>
+
+<footer>录制：Playwright 真实点击 + edge-tts 旁白 + ffmpeg 合成。没有跳过步骤、没有伪造回执。</footer>
+</div>
+</body></html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>武侠小镇：你不在的八小时 · 产品说明书（提案）</title>
+<style>
+:root{--ink:#1b1815;--muted:#6a6058;--line:#e5ded4;--paper:#faf7f2;--card:#fff;--accent:#8a5a2b;
+--y:#9a6b12;--ybg:#fbf1df;--r:#a63d2f;--rbg:#fbeae7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.75 "Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:0 22px 60px}
+header{padding:34px 0 18px;border-bottom:1px solid var(--line);margin-bottom:18px}
+h1{font-size:27px;margin:0 0 6px}
+.meta{color:var(--muted);font-size:13px}
+h2{font-size:19px;margin:26px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+h3{font-size:15.5px;margin:16px 0 6px}
+p{margin:7px 0}
+ul,ol{margin:6px 0 6px 20px;padding:0} li{margin:4px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;background:#fff;margin:8px 0}
+th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+th{background:#f6f1e9;white-space:nowrap}
+.todo{display:inline-block;background:var(--ybg);color:var(--y);font-size:11px;font-weight:700;padding:1px 7px;border-radius:20px;vertical-align:1px}
+.note{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;font-size:13px;margin:12px 0}
+code{background:#f3eee6;padding:1px 5px;border-radius:4px;font-size:12.5px}
+a{color:var(--accent)}
+footer{margin-top:36px;border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--muted)}
+.pg{page-break-after:always}
+@media print{
+ body{background:#fff;font-size:11.5pt}
+ .wrap{max-width:100%;padding:0}
+ header{padding-top:0}
+ h2{page-break-after:avoid}
+ table{page-break-inside:avoid}
+ .no-print{display:none}
+}
+</style></head><body>
+<div class="wrap">
+<header>
+<h1>武侠小镇：你不在的八小时</h1>
+<p class="meta">方向：等 ｜ 形态：产品提案 ｜ 团队：<span class="todo">待补：队伍编号 / 负责人 / 成员</span><br>
+Floatboat 最小工作台：<span class="todo">待补：私密分享链接</span> ｜ 演示视频：<a href="https://yhyu13.github.io/wuxia-town-demo/watch/">3 分钟演示</a> ｜ 可运行原型：<a href="https://yhyu13.github.io/wuxia-town-demo/play/">/play/</a> ｜ 工作台回执：<a href="https://yhyu13.github.io/wuxia-town-demo/reports/workbench/">/reports/workbench/</a></p>
+</header>
+
+<div class="note no-print">这是一份可公开阅读的说明书草案（v0.1，2026-11-17）。黄色标记是必须由团队补的真实信息，不能用推测代替；补齐后条目会变绿。页面按 6 页排版，可直接打印。</div>
+
+<h2>1. 两道门（300 字以内）</h2>
+<p><b>拿掉 AI，它还剩什么：</b>剩下一座能自己运转的乐高沙盘——240 人按作息走动、建造与拆除可撤销、百姓能拖、守卫会倒、一天结束按守卫算胜负。大约占 65%。但「这一夜为什么发生、谁为什么绕到客栈」没有来源，夜间主线不成立：剩下的是一台会转的机器，不是一个会过夜的世界。</p>
+<p><b>用户不在的时候，它在做什么：</b>22:00 读取当前世界快照 → 生成一条夜间候选（谁、去哪、为什么）→ 校验成可执行补丁 → 应用并写回执（时钟、截图、指纹）→ 失败重试一次 → 早上只给一句话和一次划走。没有需要用户在场才能完成的步骤。</p>
+<p><b>方向对照（等）：</b>这个时刻为什么你不可能在场——夜里 22:00 到 06:00，人在睡；它替你做的决定——世界线向前走八小时；错了怎么撤回——划走回到离开前，或载入过夜前快照。</p>
+
+<h2>2. 用户与问题（800 字以内）</h2>
+<p><b>用户是谁：</b>晚上没有整段时间、但想知道「我离开之后世界发生了什么」的模拟经营玩家与内容创作者。具体到人：<span class="todo">待补：3 个真人（姓名、日期、一句原话）</span>。这一格不用画像替代，访谈记录补上后本节才算完成。</p>
+<p><b>他现在怎么解决、代价是什么：</b>要么盯着屏幕等日常刷新，要么挂机看录播，要么第二天读一份没有画面的战报。代价是二选一：花时间在场，或彻底错过。</p>
+<p><b>凭什么说这是真痛：</b>我们自己的使用记录是「晚上关掉，第二天打开只剩结果」；同类作品（模拟经营、放置类）普遍把「离开后」做成数值结算，而不是一段能看见的演出。这里需要补三份访谈与两条社区讨论 <span class="todo">待补：链接</span>，否则这一节只是推断。</p>
+<p><b>提案没有运行数据，所以把边界写死：</b>先验证「第二天回来看一眼」这一个行为，不承诺留存、不承诺付费。</p>
+
+<h2>3. 产品方案（1200 字以内）</h2>
+<p><b>核心路径（3 步）：</b>打开小镇 → 点「不在场」→ 留下或划走。没有第四步。</p>
+<p><b>AI 在哪一步、做了什么不可替代的事：</b>在「这一夜演什么」。它读当前世界（谁在哪、谁和谁有过节、上一夜被拒了什么），产出一个意图与一句话；规则层只做校验、落补丁、回放。拿掉它，夜间只剩空转的时钟——这正是第 1 节说的 35%。</p>
+<p><b>无人值守的一个完整周期：</b>22:00 定时触发 → 快照 → 1 次导演调用（≤8k tokens）→ schema 校验与白名单 → 写入日程覆盖 → 生成回执与截图 → 06:00 完成。只有「失败、越权、超预算」三种情况才打扰用户。</p>
+<p><b>运行条件（必填）：</b></p>
+<ul>
+<li>跑在用户自己的 Windows 电脑上：Floatboat 工作台负责入口与定时，本地服务负责跑页面与写回执。</li>
+<li>电脑关机、休眠、断网时流程会停；醒来补跑一次，并在回执里写「错过」。</li>
+<li>不在场流程：每天 22:00 的定时任务（当前是 Windows 计划任务 <code>WuxiaNightRun</code>，可换成 Floatboat 的定时或 webhook）。</li>
+<li>评委试用期（11-19 至 11-21）保持开机与联网；这是已知代价，写在明面上。</li>
+</ul>
+<p><b>最小工作台覆盖了哪几条路径、没覆盖哪些：</b>覆盖「入口 → 定时跑一夜 → 回执」；不覆盖多世界、多人协作、在线模型直连与支付。工作台截图见 <a href="https://yhyu13.github.io/wuxia-town-demo/reports/workbench/">回执页</a>。</p>
+
+<h2>4. 治理三问（必答）</h2>
+<h3>判 · 动作清单</h3>
+<table>
+<tr><th>#</th><th>动作</th><th>判断错了最坏会怎样</th><th>能撤回吗</th><th>处理方式</th><th>为什么</th></tr>
+<tr><td>1</td><td>生成夜间候选（改日程覆盖）</td><td>世界线走偏，看到不想看的一夜</td><td>能：划走 / 快照</td><td>先做后报</td><td>只在夜里发生，不碰白天</td></tr>
+<tr><td>2</td><td>按破坏种类改布局</td><td>城变丑、路走不通</td><td>能：换城重建</td><td>先做后报</td><td>有上限，且可整城重建</td></tr>
+<tr><td>3</td><td>把百姓拉进阵营</td><td>人口结构与预期不符</td><td>能：重建世界</td><td>自动</td><td>可观察、可逆，不影响存档</td></tr>
+<tr><td>4</td><td>写回执、发通知</td><td>打扰用户</td><td>能：撤回通知</td><td>先做后报</td><td>只在失败时打扰</td></tr>
+<tr><td>5</td><td>调用模型（产生费用）</td><td>超预算、账单不可控</td><td>不能退钱</td><td>必须人批（设月度上限）</td><td>每夜 1 次，到顶即停</td></tr>
+<tr><td>6</td><td>修改自己的规则 / 提示词</td><td>越权、无法回滚</td><td>能：版本回滚</td><td>不做</td><td>本轮明确不做自我修改</td></tr>
+</table>
+<p><b>最危险的是哪一条：</b>第 5 条（花费）与第 2 条（世界被改坏）。前者不可退钱，后者会让人不想再打开。</p>
+<p><b>用户不回应时默认怎么做：</b>不应用候选，保留到下一次；不重复调用模型。</p>
+<p><b>这套控制本身的代价：</b>用户要留一台开机的电脑、要看一眼回执；我们接受，因为换来的是「不用在场」。</p>
+
+<h3>名 · 身份卡</h3>
+<table>
+<tr><th>项目</th><th>回答</th></tr>
+<tr><td>用谁的身份</td><td>玩家自己的本地世界，不借用第三方账号</td></tr>
+<tr><td>能碰什么</td><td>世界线、日程覆盖、布局、人口阵营、回执</td></tr>
+<tr><td>不能碰什么</td><td>账号与密码、支付、外部数据、其他玩家世界、系统文件</td></tr>
+<tr><td>花费上限 / 到顶怎么办</td><td>每夜 1 次调用，月度上限；到顶停并通知，不静默续费</td></tr>
+<tr><td>出错时用户看到什么</td><td>回执上标 <code>fallback</code> 或失败原因，不写「已完成」</td></tr>
+<tr><td>谁来担</td><td>用户；产品不代替用户做不可逆决定</td></tr>
+</table>
+
+<h3>证 · 回执</h3>
+<p><img src="https://yhyu13.github.io/wuxia-town-demo/reports/workbench/receipts/2026-11-17.png" alt="回执截图" style="width:100%;border:1px solid #e5ded4;border-radius:8px"></p>
+<table>
+<tr><th>项目</th><th>回答</th></tr>
+<tr><td>「完成」怎么定义</td><td>回执里同时有：时钟 from→to、谁、去哪、截图、夜间指纹，且指纹可复现</td></tr>
+<tr><td>一个「假装做完了」的场景</td><td>只写「已完成」，没有截图、没有指纹、时钟没变</td></tr>
+<tr><td>怎么被发现</td><td>指纹对不上、截图与实际不符、时钟没前进</td></tr>
+<tr><td>怎么撤回</td><td>划走回到离开前；或载入过夜前快照</td></tr>
+</table>
+
+<h2>5. 最小验证计划（必交）</h2>
+<p><b>我要验证的判断：</b>用户愿意为一个「自己不在场时仍在推进、且第二天能用一句话讲清」的世界，第二天回来看一眼。</p>
+<table>
+<tr><th>周</th><th>做什么</th><th>花多少</th><th>看什么指标</th></tr>
+<tr><td>第 1 周</td><td>招 10 人各跑 3 夜（微信群 + 小红书），每晚 22:00 自动跑，早上只看回执</td><td>200 元（红包/咖啡）</td><td>次日打开率、10 秒复述准确率、划走率</td></tr>
+<tr><td>第 2 周</td><td>再招 10 人，分「关机」与「常开」两组，记录错过与补跑</td><td>300 元</td><td>失败率、抱怨点、第 7 天是否还在用</td></tr>
+</table>
+<p><b>什么结果出现就承认方向不成立：</b>次日打开率 <30%，或 10 秒复述准确率 <50%，或划走率 >70%。三条中两条成立即停，不解释成「用户不懂」。</p>
+
+<h2>6. 为什么现在做得了（400 字以内）</h2>
+<p>三件事同时到位：浏览器能跑 240 人的确定性群体（三个 InstancedMesh、52 draw calls）；模型单价与延迟降到「每夜 1 次」可以承受；单文件分发让评委零安装打开。再加上种子驱动的回放，同一夜可以逐位复现，回执才有意义。</p>
+<p>一年前做同样的事，要客户端、要服务器、要美术团队：端侧算力不够、模型贵且慢、浏览器 3D 管线不成熟。现在一个人加一个 agent 就能把「过夜」做成可验证的闭环。</p>
+
+<h2>7. 增量边界</h2>
+<ul>
+<li>11 月 3 日之前已经有的：无。仓库 2026-11-11 建立。</li>
+<li>比赛期间新做的：全部——沙盘、夜间候选、阵营、拖动、胜负、客栈资产、工作台与回执。</li>
+<li>怎么证明：仓库提交记录与 PR #1–#145；<a href="https://yhyu13.github.io/wuxia-town-demo/reports/2026-11-17-closeout.html">收口报告</a> 里有按天的提交与证据。</li>
+</ul>
+
+<h2>8. 开发声明</h2>
+<ul>
+<li>AI 工具与模型：Cindy / Claude 辅助开发；夜间导演模型 <span class="todo">待补：模型名与版本</span>；语音 edge-tts。</li>
+<li>开源组件：three.js、Playwright、FFmpeg、Python、Pillow。</li>
+<li>第三方 API：Floatboat（工作台）、Tripo（资产）、GitHub Pages（托管）。</li>
+</ul>
+
+<h2>9. 证据附录（选填）</h2>
+<p><b>一个可被证伪的判断（+2）：</b>12 个月后，如果次日打开率仍低于 20%，或用户说不出「昨晚发生了什么」，就说明「不在场的一夜」不是真需求，我们错了。</p>
+<p><b>端云分工（+2）：</b>端侧放 240 人调度、确定性回放、建造与拖动——不花钱、断网可用；云侧只放每夜 1 次导演调用。相比逐 agent 调用，token 与延迟都低两个数量级；代价是夜间内容不够细，这一点写进边界。</p>
+
+<div class="note no-print">
+<b>交之前还要补的（按重要性）：</b>
+<ol>
+<li>3 个真人访谈（第 2 节）——没有它，这一节不算完成。</li>
+<li>队伍编号 / 负责人 / 成员 / Floatboat 私密链接（页头）。</li>
+<li>模型名与版本（第 8 节）；接了模型后，把第 4 节的回执截图换成模型回执。</li>
+<li>把本页复制到飞书文档（任何人可查看），保留小节名，用于评委批注。</li>
+</ol>
+</div>
+
+<footer>草案 v0.1 · 2026-11-17 · 依据赛事《作品提交指南》v1.2 与《说明书模板》v1.2（模板二）· 本页可离线打开，图片来自公网回执。</footer>
+</div>
+</body></html>
