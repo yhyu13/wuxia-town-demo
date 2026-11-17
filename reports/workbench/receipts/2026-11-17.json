@@ -19,22 +19,26 @@
   "to": "第2天 02:00"
  },
  "summary": "杨惊鸿留下了，绕到客栈走了半个时辰。时钟从 第1天 18:00 到 第2天 02:00。种子不变。",
- "candidateId": "candidate:e2a4004d3ee8d85bfc508db09f88a2e33ad5d2bddedebec5d9d57e9895735314",
- "eventId": "e2a4004d3ee8d85bfc508db09f88a2e33ad5d2bddedebec5d9d57e9895735314:0",
+ "candidateId": "candidate:c7a232f55d0052f4a8724dc71d28c87cd250cf66c5d535c29a2981f17f3a16e0",
+ "eventId": "c7a232f55d0052f4a8724dc71d28c87cd250cf66c5d535c29a2981f17f3a16e0:0",
  "ruleVersion": "night-detour-v1",
  "director": {
-  "mode": "rule",
-  "llm": false,
-  "model": "rule-v1",
-  "tokens": 0,
-  "fallback": true,
-  "fallbackReason": "LLM 未接入：本轮为规则回执"
+  "mode": "llm",
+  "model": "deepseek-chat",
+  "tokens": 857,
+  "latencyMs": 1167,
+  "fallback": false,
+  "cacheHit": true,
+  "llm": true,
+  "reason": "杨惊鸿名含惊鸿，夜行半镇恰似惊鸿掠影，与夜间巡游气质最合",
+  "line": "夜色里绕行半个时辰，客栈的风也追不上我的影子。",
+  "confidence": 0.72
  },
- "latencyMs": 7892,
+ "latencyMs": 6861,
  "reversible": true,
  "screenshot": "receipts/2026-11-17.png",
- "createdAt": "2026-11-17T16:40:07+08:00",
+ "createdAt": "2026-11-17T17:16:28+08:00",
  "host": "DESKTOP-QE51K9H",
- "sha256": "129a0f68441e8978df4ed49e9f7ab9c3adb1f42ad0c0d9e8253582cf47436226",
- "nightSha256": "dbe86f83c5d372a6d13a79feaa3829eeb9b474a91b141ea740c85d80f64b7c4f"
+ "sha256": "bade7a63dbd7a4e3990f59c91c057ca808f0dfc74744e11404a04a380e7fe1ba",
+ "nightSha256": "becc987221ba3d85eb3e893baab4b9bda56946a9ca7f8aecbaf31faa02f0a8fe"
 }
