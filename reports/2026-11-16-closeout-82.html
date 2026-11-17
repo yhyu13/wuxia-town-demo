@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>武侠小镇 Feature 收口 2026-11-16</title>
+<style>
+ body{font:16px/1.7 "Microsoft YaHei",sans-serif;max-width:980px;margin:24px auto;padding:0 16px;color:#222}
+ h1{font-size:22px} h2{font-size:18px;margin-top:28px;border-bottom:1px solid #ddd;padding-bottom:4px}
+ table{border-collapse:collapse;width:100%;font-size:13px} td,th{border:1px solid #ddd;padding:5px 7px;text-align:left;vertical-align:top}
+ th{background:#f6f6f6}
+ .g{color:#171} .y{color:#a60} .r{color:#a33}
+ .sum{display:flex;gap:12px;flex-wrap:wrap} .sum div{flex:1;min-width:160px;border:1px solid #eee;border-radius:6px;padding:10px}
+ .big{font-size:26px;font-weight:700}
+ .box{background:#fafafa;border:1px solid #eee;padding:12px 16px;border-radius:6px}
+ code{font-size:13px} svg{width:100%;height:auto}
+</style>
+</head>
+<body>
+<h1>昨晚的 Feature 完成了没有</h1>
+<p>游戏是武侠小镇，平台是浏览器，主干 <code>acc8614</code>。时间是 2026-11-16 一整天（UTC+8）。判定人按验收日志核对，2026-11-17。</p>
+
+<div class="sum">
+<div><b>结论</b><br><span class="big y">部分达成</span><br>可玩，可演示，不可发布</div>
+<div><b>完成度</b><br><span class="big">82%</span><br>23 / 28 权重<br>按玩家能感知的程度加权</div>
+<div><b>质量</b><br>浏览器闸门 77 过 0 失败<br>P0 没有记录<br>帧率、崩溃率未测</div>
+<div><b>最大风险</b><br>破坏的大部分种类<br>还没有自己的躲法</div>
+</div>
+<p>需要定一件：倒地算不算死。没定之前，胜负只看守卫倒没倒，不看百姓死没死。</p>
+
+<h2>一、每个 Feature</h2>
+<p>权重按玩家能不能直接感受到。能在一次游玩里碰到的给 3，只在换城时碰到的给 2，玩家看不到的给 1。完成度是通过项的权重加总，除以全部权重。</p>
+<table>
+<tr><th>Feature</th><th>玩家能感到什么</th><th>权重</th><th>状态</th><th>证据</th></tr>
+<tr><td>不在场的一夜</td><td>点一次生成一条候选，留下时钟往前，划走回到旧世界</td><td>3</td><td class="g">绿</td><td>#124、#125，浏览器闸门 77 过</td></tr>
+<tr><td>拖动认武侠</td><td>百姓守卫能拖会飞会倒，武侠按住不动</td><td>3</td><td class="g">绿</td><td>#133，af8865b 上采样 6 次坐标不变</td></tr>
+<tr><td>阵营</td><td>百姓被拉进阵营后职业不变</td><td>3</td><td class="g">绿</td><td>#138，faction-check 退出码 0</td></tr>
+<tr><td>镜头外拉人</td><td>人在画面里不被拉，离开画面才被拉</td><td>3</td><td class="g">绿</td><td>#139，recruit-check 退出码 0</td></tr>
+<tr><td>打守卫</td><td>进了阵营的百姓走向守卫</td><td>3</td><td class="y">黄</td><td>#141，fight-check 退出码 0。只改了走向，守卫不会被打倒</td></tr>
+<tr><td>一天结束的胜负</td><td>末尾且守卫全倒才显示城被解放</td><td>3</td><td class="g">绿</td><td>#142，verdict-check 退出码 0</td></tr>
+<tr><td>换城</td><td>下一座城按上一座用得最多的破坏改</td><td>2</td><td class="g">绿</td><td>#132，三次位置各不同</td></tr>
+<tr><td>躲法</td><td>落雷不挪人，火灾往外走</td><td>2</td><td class="y">黄</td><td>#135。只覆盖两种，其余仍一律向东挪</td></tr>
+<tr><td>外来武侠</td><td>有人进阵营，城门外才出现武侠</td><td>2</td><td class="g">绿</td><td>#140，城外从 0 到 1，总数 240 不变</td></tr>
+<tr><td>客栈模型</td><td>客栈不再是方块</td><td>2</td><td class="y">黄</td><td>#144，面数 15000。减面后的样子没人看过</td></tr>
+<tr><td>文档</td><td>玩家看不到</td><td>1</td><td class="g">绿</td><td>#143，gdd 四节都在</td></tr>
+<tr><td>留偏好的入口</td><td>玩家写下希望谁出场</td><td>3</td><td class="r">红</td><td>输入仍埋在实验折叠里，没有验收</td></tr>
+</table>
+<p>绿的八项权重是 3+3+3+3+3+2+2+1 = 23。全部十二项是 3×7+2×3+1 = 28。黄的三项验收都只覆盖了一部分，不计入通过。23 / 28 = 82%。</p>
+<p>直接回答：没有完成。绿的是不在场、拖动、阵营、拉人、胜负、换城、外来武侠、文档。黄的是打守卫、躲法、客栈。红的是玩家留偏好的入口。可演示，不可发布，因为红的那一项是这一夜和玩家有没有关系的关键。</p>
+
+<h2>二、谁做了什么</h2>
+<table>
+<tr><th>人</th><th>负责的</th><th>玩家能感到的</th><th>证据</th><th>风险</th></tr>
+<tr><td>developer</td><td>拖动、锁定、躲法、规划页数字</td><td>武侠拖不动，落雷不挪人</td><td>1eea1bc、af8865b、d39d1a8、e3a117d</td><td>拖动第一次没锁住，退回重做</td></tr>
+<tr><td>tester</td><td>闸门和拖动验收</td><td>没有直接的，他保证数字是真的</td><td>3cd3cce 上三轮 77 过，af8865b 上 7 项过</td><td>早期提交是 71 过 7 失败</td></tr>
+<tr><td>reviewer</td><td>六次审查</td><td>没有直接的，他拦住了没锁住的拖动</td><td>#133 先黄后绿</td><td>客栈的样子他没看</td></tr>
+<tr><td>avatar</td><td>派和拒</td><td>没有直接的</td><td>#136、#137 仍开着</td><td>两件没进主干</td></tr>
+<tr><td>主控</td><td>阵营、拉人、外来武侠、打守卫、胜负、文档、客栈</td><td>这些都能在游戏里碰到</td><td>#138 到 #144</td><td>打守卫只改了走向</td></tr>
+</table>
+
+<h3>1. 一个 Feature 怎么交付</h3>
+<svg viewBox="0 0 880 130">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#888"/></marker></defs>
+<g font-size="13" text-anchor="middle">
+<rect x="15" y="45" width="110" height="40" rx="6" fill="#eef"/><text x="70" y="70">定验收</text>
+<rect x="165" y="45" width="110" height="40" rx="6" fill="#eef"/><text x="220" y="70">写代码</text>
+<rect x="315" y="45" width="130" height="40" rx="6" fill="#efe"/><text x="380" y="70">本地跑验收</text>
+<rect x="485" y="45" width="130" height="40" rx="6" fill="#efe"/><text x="550" y="70">审查判绿黄</text>
+<rect x="655" y="45" width="110" height="40" rx="6" fill="#fee"/><text x="710" y="70">可演示</text>
+<rect x="790" y="45" width="75" height="40" rx="6" fill="#fcc"/><text x="827" y="70">发布</text>
+</g>
+<g stroke="#888" fill="none" marker-end="url(#a)">
+<path d="M125 65 H165"/><path d="M275 65 H315"/><path d="M445 65 H485"/><path d="M615 65 H655"/><path d="M765 65 H790" stroke-dasharray="4 3"/>
+</g>
+</svg>
+<p>虚线那一步没走到。可演示，但留偏好的入口没做，不能当发布。</p>
+
+<h3>2. 依赖</h3>
+<svg viewBox="0 0 880 150">
+<g font-size="13" text-anchor="middle">
+<rect x="20" y="55" width="100" height="36" rx="6" fill="#efe"/><text x="70" y="78">拖动</text>
+<rect x="170" y="55" width="100" height="36" rx="6" fill="#efe"/><text x="220" y="78">阵营</text>
+<rect x="320" y="55" width="100" height="36" rx="6" fill="#efe"/><text x="370" y="78">拉人</text>
+<rect x="470" y="15" width="110" height="36" rx="6" fill="#efe"/><text x="525" y="38">外来武侠</text>
+<rect x="470" y="95" width="110" height="36" rx="6" fill="#ffd"/><text x="525" y="118">打守卫</text>
+<rect x="640" y="55" width="100" height="36" rx="6" fill="#efe"/><text x="690" y="78">胜负</text>
+</g>
+<g stroke="#888" fill="none" marker-end="url(#a)">
+<path d="M120 73 H170"/><path d="M270 73 H320"/>
+<path d="M420 65 L470 33"/><path d="M420 81 L470 113"/>
+<path d="M580 33 L640 65"/><path d="M580 113 L640 81"/>
+</g>
+</svg>
+<p>打守卫是黄的，因为它只改了百姓走向谁，守卫不会被打倒。胜负因此只能靠手动把守卫放倒来演示。</p>
+
+<h3>3. 玩家怎么走一遍</h3>
+<svg viewBox="0 0 880 120">
+<g font-size="12" text-anchor="middle">
+<rect x="10" y="40" width="100" height="40" rx="6" fill="#eef"/><text x="60" y="65">打开</text>
+<rect x="140" y="40" width="110" height="40" rx="6" fill="#efe"/><text x="195" y="65">拖一个人</text>
+<rect x="280" y="40" width="120" height="40" rx="6" fill="#efe"/><text x="340" y="65">认出武侠</text>
+<rect x="430" y="40" width="120" height="40" rx="6" fill="#ffd"/><text x="490" y="65">看百姓打守卫</text>
+<rect x="580" y="40" width="130" height="40" rx="6" fill="#efe"/><text x="645" y="65">等到一天结束</text>
+<rect x="740" y="40" width="120" height="40" rx="6" fill="#fee"/><text x="800" y="65">看城被解放</text>
+</g>
+<g stroke="#888" fill="none" marker-end="url(#a)">
+<path d="M110 60 H140"/><path d="M250 60 H280"/><path d="M400 60 H430"/><path d="M550 60 H580"/><path d="M710 60 H740"/>
+</g>
+</svg>
+<p>黄色那一步玩家只能看到百姓朝守卫走，看不到守卫倒下。要演示完整闭环，得手动把守卫放倒。</p>
+
+<h2>三、400 字</h2>
+<div class="box" id="brief">
+<p>昨晚的目标部分达成，完成度 82%。可玩，可演示，不能发布。主干是 acc8614，从第 129 号到第 144 号都合并了。</p>
+<p>玩家现在能做的是这些。点一次不在场，生成一条候选，留下时钟往前，划走回到旧世界，编号不变。拖一个人就能认出谁是武侠，百姓和守卫会飞出去倒下，武侠按住不动。百姓离开画面才被拉进阵营，职业不变。有人进了阵营，城门外才出现武侠。到了一天的末尾且守卫全倒，画面显示城被解放。</p>
+<p>三件只做了一半。进了阵营的百姓会走向守卫，但守卫不会被他们打倒，胜负只能靠手动放倒守卫来演示。破坏的躲法只做了落雷和火灾，其余种类仍一律向东挪。客栈换成了 15000 面的模型，但减面之后的样子没有人看过。</p>
+<p>一件没做。玩家留下偏好的入口还埋在实验折叠里，所以这一夜还不是按玩家的意思走的。这是不能发布的原因。</p>
+<p>质量上浏览器闸门 77 项过、0 失败。帧率和崩溃率没有测。下一步先定倒地算不算死，再让进了阵营的百姓真的把守卫打倒。</p>
+</div>
+
+<h2>四、为什么这么干</h2>
+<table>
+<tr><th>目标</th><th>选了什么</th><th>没选什么</th><th>对玩家的影响</th><th>风险</th></tr>
+<tr><td>不在场不丢世界</td><td>候选和旧世界分开</td><td>每次重建</td><td>敢划走，因为划走不丢</td><td>两份状态要保持一致</td></tr>
+<tr><td>认出武侠</td><td>靠拖不动</td><td>靠外观不同</td><td>要亲手试才知道</td><td>第一次没锁住，退回重做</td></tr>
+<tr><td>武侠藏得住</td><td>只在离开画面时拉人</td><td>随时拉</td><td>盯着就看不到拉人</td><td>验收用的是投影值，不是肉眼</td></tr>
+<tr><td>胜负有分量</td><td>拖到一天末尾才显示</td><td>一倒就显示</td><td>中午看不到结果</td><td>守卫不会被百姓打倒，演示要手动</td></tr>
+<tr><td>客栈像真的</td><td>生成再减到 1.5 万面</td><td>直接用 143 万面</td><td>不再是方块</td><td>减面后的样子没人看过</td></tr>
+</table>
+
+<h2>五、清单</h2>
+<p>100% 指这一项的验收场景全部通过，而且有日志。代码写完不算。</p>
+<table>
+<tr><th>项</th><th>状态</th><th>100%</th><th>证据</th><th>差在哪</th></tr>
+<tr><td>不在场</td><td class="g">绿</td><td>是</td><td>闸门 77 过</td><td></td></tr>
+<tr><td>拖动</td><td class="g">绿</td><td>是</td><td>采样 6 次不变</td><td></td></tr>
+<tr><td>阵营</td><td class="g">绿</td><td>是</td><td>职业不变</td><td></td></tr>
+<tr><td>拉人</td><td class="g">绿</td><td>是</td><td>投影内不变、外变</td><td></td></tr>
+<tr><td>外来武侠</td><td class="g">绿</td><td>是</td><td>城外 0 到 1</td><td></td></tr>
+<tr><td>胜负</td><td class="g">绿</td><td>是</td><td>末尾才显示</td><td></td></tr>
+<tr><td>换城</td><td class="g">绿</td><td>是</td><td>三次位置不同</td><td></td></tr>
+<tr><td>文档</td><td class="g">绿</td><td>是</td><td>四节都在</td><td></td></tr>
+<tr><td>打守卫</td><td class="y">黄</td><td>否</td><td>只验了走向</td><td>守卫不倒</td></tr>
+<tr><td>躲法</td><td class="y">黄</td><td>否</td><td>只覆盖两种</td><td>其余向东挪</td></tr>
+<tr><td>客栈</td><td class="y">黄</td><td>否</td><td>面数对</td><td>样子没人看</td></tr>
+<tr><td>留偏好</td><td class="r">红</td><td>否</td><td>无</td><td>没有入口</td></tr>
+</table>
+<p>没有全部打勾，不是 100%。差四项里，留偏好那一项直接影响昨晚的目标，因为这一夜还不是按玩家的意思走的。</p>
+
+<h2>六、前后对比</h2>
+<svg viewBox="0 0 880 220">
+<g font-size="13">
+<text x="200" y="20" text-anchor="middle">之前：点一次整座重建</text>
+<text x="660" y="20" text-anchor="middle">现在：划走回到旧世界</text>
+<line x1="440" y1="30" x2="440" y2="200" stroke="#ddd"/>
+<g fill="#c8c2b4"><rect x="60" y="50" width="60" height="40"/><rect x="140" y="50" width="60" height="40"/><rect x="220" y="50" width="60" height="40"/>
+<rect x="60" y="110" width="60" height="40"/><rect x="140" y="110" width="60" height="40"/><rect x="220" y="110" width="60" height="40"/></g>
+<text x="170" y="180" text-anchor="middle" fill="#666">全是方块</text>
+<g fill="#b08948"><polygon points="560,46 610,100 510,100"/></g>
+<rect x="760" y="60" width="60" height="50" fill="#6a8" rx="3"/>
+<text x="790" y="90" text-anchor="middle" fill="#fff" font-size="12">客栈</text>
+<g fill="#3b7"><circle cx="540" cy="150" r="5"/><circle cx="590" cy="162" r="5"/></g>
+<g fill="#c34"><circle cx="690" cy="146" r="5"/><circle cx="745" cy="160" r="5"/></g>
+<text x="670" y="195" text-anchor="middle" fill="#666">红的拖不动</text>
+</g>
+</svg>
+<p>这是示意，不是截图，也没有 GIF。没有真实录屏，不用生成的动图冒充。左边是 11 月 16 日早上之前，右边是现在。</p>
+
+<h2>七、没验证的</h2>
+<ul>
+<li>帧率和崩溃率。没有测。</li>
+<li>客栈减面后的样子。面数过了，没人看过像不像。</li>
+<li>#136 和 #137 的检查。两件还开着，我没跑。</li>
+<li>每个人的耗时。没有记录。</li>
+</ul>
+
+<h2>八、证据</h2>
+<ul>
+<li>主干 <code>git log origin/main</code>，HEAD <code>acc8614</code>。</li>
+<li>验收日志在 <code>wuxia-town/.agent/tmp/</code>：faction、recruit、outsider、fight、verdict、inn 六份，<code>ok</code> 都是 true。</li>
+<li>闸门：tester 在 <code>3cd3cce</code> 上三轮，77 过 0 失败，退出码 0。</li>
+<li>客栈：<code>bpy_checks</code> GATE PASS，页面读到面数 15000。</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>今天的收尾 · 2026-11-16</title>
+<style>
+  :root { color-scheme: light dark; --ink:#1c1915; --muted:#675f56; --line:#e4ddd3; --paper:#fbf8f4; --card:#fff; --accent:#a63d2f; --ok:#2f7d4f; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#f4efe8; --muted:#b7aea4; --line:#3a342d; --paper:#16130f; --card:#221e19; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.7 "Source Han Sans SC","Noto Sans SC","Microsoft YaHei",sans-serif; }
+  main { max-width:1040px; margin:0 auto; padding:44px 22px 80px; }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 8px; }
+  h2 { font-size:21px; margin:44px 0 10px; }
+  h3 { font-size:17px; margin:22px 0 6px; }
+  p { margin:8px 0; }
+  .muted { color:var(--muted); }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  figure { margin:14px 0; }
+  img { width:100%; border:1px solid var(--line); border-radius:12px; }
+  figcaption { color:var(--muted); font-size:13px; margin-top:6px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { text-align:left; padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; }
+  code { font-family:ui-monospace,monospace; font-size:.9em; }
+  .bar { height:10px; background:var(--line); border-radius:99px; overflow:hidden; margin:6px 0 14px; }
+  .bar i { display:block; height:100%; background:var(--accent); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:10px 0; }
+  .ok { color:var(--ok); }
+  pre.mmd { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; overflow:auto; font:13px/1.5 ui-monospace,monospace; }
+  @media (max-width:760px) { .row { grid-template-columns:1fr; } h1 { font-size:26px; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="muted">武侠世界 · 2026-11-16 · main <code>bfd3f3b</code></p>
+  <h1>今天把台上的按钮改对了，画面还不会演。</h1>
+  <p>点「不在场 · 离开 8 小时」现在生成一条候选，不再换种子、不再清空建造。弹窗用一句话讲完这一夜。划走停在离开前，留下才把时钟推到早上。</p>
+
+  <h2>两张决定</h2>
+  <div class="row">
+    <figure>
+      <img src="decide-compare/reject.png" alt="划走后时钟停在 23:50，画面是夜间">
+      <figcaption>划走。时钟回到 23:50 子时，累计 4310，种子 20260818。</figcaption>
+    </figure>
+    <figure>
+      <img src="decide-compare/accept.png" alt="留下后时钟到 07:50，画面是白天">
+      <figcaption>留下。时钟到 07:50 辰时，累计 4790，种子不变，天色变亮。</figcaption>
+    </figure>
+  </div>
+  <p class="muted">两次走的是同一句：「罗星辰留下了，绕到客栈走了半个时辰。时钟从第 3 天 23:50 到第 4 天 07:50。」命令 <code>python .agent/tmp/decide-compare.py</code>，退出码 0。</p>
+
+  <h2>今天进 main 的两笔</h2>
+  <table>
+    <tr><th>PR</th><th>合并</th><th>提交</th><th>改了什么</th></tr>
+    <tr><td>#124</td><td>09:31</td><td><code>4bcc330</code></td><td>「不在场」改走候选。弹窗写谁、去哪、从几点到几点。</td></tr>
+    <tr><td>#125</td><td>09:37</td><td><code>bfd3f3b</code></td><td>面板移到底部中间。实验项默认折叠，不再盖住左侧界面。</td></tr>
+  </table>
+  <p>回归 <code>python scripts/verify-browser.py</code>：77 项通过，0 失败，退出码 0。旧报告的内容断言改成了候选行为断言，所以总数从 78 变成 77。</p>
+  <figure>
+    <img src="panel-check/panel.png" alt="夜间面板收在底部中间，左侧界面完整">
+    <figcaption>面板宽 360、高 163，位于底部中间，不与「不在场」按钮重叠。</figcaption>
+  </figure>
+
+  <h2>进度</h2>
+  <p>里程碑 13 个切片，4 个有代码和证据，1 个半截。约 <b>35%</b>。昨天是 27%。</p>
+  <div class="bar"><i style="width:35%"></i></div>
+  <p>SOP 21 条，15 条有证据。约 <b>71%</b>，与昨天相同。独立复核和非作者复演仍然没有，所以这 15 条还不能写成 SOP 通过。</p>
+  <div class="bar"><i style="width:71%"></i></div>
+  <p class="muted">未跑：T01 状态归属、T17 断网交付、T18 远端失败阻断、T19 非作者复演、T20 Colab、T21 路演自动检查。</p>
+
+  <h2>明天的重点</h2>
+  <p>让这一夜在画面上发生，而不只是时钟跳一下。罗星辰说绕到客栈，人就该出现在客栈附近。做到这一点，候选才从「一句说明」变成「一段可以看的演出」。</p>
+
+  <h2>跟经理怎么说</h2>
+  <div class="card">
+    <h3>200 字</h3>
+    <p>今天修的是上台时会点错的那个按钮。原先点「不在场」会换掉整个世界，观众看到的和我们修的不是一回事。现在这个按钮生成一条候选，用一句话讲完：谁、去了哪、时钟从几点到几点。不满意就划走，世界回到离开前的 23:50；接受才把时钟推到第二天 07:50，种子始终不变。面板也从盖住界面改到了底部。回归 77 项全过，两笔都已进主线。画面上人物还不会真的走过去，这是明天要补的。</p>
+  </div>
+  <div class="card">
+    <h3>400 字</h3>
+    <p>今天的工作是把夜间闭环接到观众真的会点的地方。之前的修复藏在一个实验面板里，台上的「不在场 · 离开 8 小时」仍走旧逻辑：划走就换种子、清空建造。观众点的和我们验的不是同一个东西，所以先改这个按钮。</p>
+    <p>现在点它会生成一条候选，弹窗只写一句人话，例如「罗星辰留下了，绕到客栈走了半个时辰。时钟从第 3 天 23:50 到第 4 天 07:50。种子不变。」三个选择是划走、留下、先不决定。实测划走后累计分钟回到 4310，留下后变成 4790，种子都是 20260818。面板从盖住左侧界面移到了底部中间，实验用的控件默认收起。</p>
+    <p>用法上，路演时直接点原来的按钮即可，不需要打开实验面板。验收跑的是仓库现成的浏览器回归，77 项通过、0 失败，另有一个对照脚本分别走两个决定并截图。两笔改动都过了仓库的六项检查和合并前检查，已进主线 <code>bfd3f3b</code>。</p>
+    <p>还差一步：三维场景不反映这一夜，人物不会出现在客栈。希望你看两张对照图，确认「划走回夜间、留下到早晨」这个呈现是否就是明天上台要的；如果要人物真的走过去，我明天先做这一件。</p>
+  </div>
+
+  <h2>先对齐用词</h2>
+  <table>
+    <tr><th>中文</th><th>英文</th><th>为什么用</th><th>是什么</th><th>怎么用</th></tr>
+    <tr><td>已接受世界</td><td>accepted world</td><td>观众看到的必须有个不动的底</td><td>种子、布局、建造、审计、时钟</td><td>候选决定之前，它保持离开时的样子</td></tr>
+    <tr><td>候选</td><td>candidate</td><td>一夜的结果不能直接改世界</td><td>一条待决定的变化</td><td>生成后只展示，接受才写入</td></tr>
+    <tr><td>划走</td><td>reject</td><td>观众要能反悔</td><td>丢弃候选</td><td>世界回到离开前，含时钟</td></tr>
+    <tr><td>留下</td><td>accept</td><td>观众要能确认</td><td>把候选写入世界</td><td>时钟推到候选时刻，种子不变</td></tr>
+    <tr><td>不在场</td><td>away</td><td>这是台上会点的按钮</td><td>原有入口</td><td>现在触发候选，不再换种子</td></tr>
+  </table>
+  <p>串起来就是：人离开前点「不在场」，系统给一条候选；划走就当没发生，留下才把这一夜写进世界。按钮是入口，候选是缓冲，两个决定是出口。</p>
+
+  <h2>验收对齐</h2>
+  <p>下表按「能交付」排。每一行都有一个可执行的判定，不做百分比。</p>
+  <table>
+    <tr><th>#</th><th>交付物</th><th>判定</th><th>现在</th></tr>
+    <tr><td>1</td><td>点「不在场」不改世界</td><td>弹窗期间累计分钟不变</td><td class="ok">已过</td></tr>
+    <tr><td>2</td><td>一句话讲清这一夜</td><td>含人名、地点、两个时刻</td><td class="ok">已过</td></tr>
+    <tr><td>3</td><td>划走回到离开前</td><td>4310，种子不变</td><td class="ok">已过</td></tr>
+    <tr><td>4</td><td>留下推到早晨</td><td>4790，种子不变</td><td class="ok">已过</td></tr>
+    <tr><td>5</td><td>面板不挡界面</td><td>不与「不在场」重叠</td><td class="ok">已过</td></tr>
+    <tr><td>6</td><td>回归不退步</td><td>verify-browser 0 失败</td><td class="ok">77 / 0</td></tr>
+    <tr><td>7</td><td>人物走到候选地点</td><td>接受后该人出现在客栈附近</td><td>未做</td></tr>
+    <tr><td>8</td><td>断网打开交付页</td><td>核心流程无外部请求</td><td>未跑</td></tr>
+    <tr><td>9</td><td>非作者按稿走一遍</td><td>步骤与版本一致</td><td>未跑</td></tr>
+  </table>
+  <p>1 到 6 今天已完成。7 是明天的重点。8 和 9 是上台前的最后两道，不依赖新功能。</p>
+
+  <h2>脚本怎么串</h2>
+  <pre class="mmd">flowchart TD
+  A["demo/index.html 正式页面"] --> B["1 verify-browser.py"]
+  A --> C["2 away-check.py"]
+  A --> D["3 decide-compare.py"]
+  A --> E["4 panel-check.py"]
+  F["store.js"] --> G["5 test-store.cjs"]
+  H["night-events.js"] --> I["6 tests.cjs"]
+  B --> J["77 项回归"]
+  C --> K["一句话 + 世界不动"]
+  D --> L["划走 4310 / 留下 4790"]
+  E --> M["面板位置"]
+  G --> N["存档 14 项"]
+  I --> O["事件规则 15 项"]</pre>
+  <p class="muted">图在不渲染 Mermaid 的环境里会显示源码。节点编号与下表对应。</p>
+
+  <h2>编号对照</h2>
+  <table>
+    <tr><th>#</th><th>脚本</th><th>输入</th><th>输出</th><th>依赖</th></tr>
+    <tr><td>1</td><td><code>scripts/verify-browser.py</code></td><td>正式页面</td><td>77 项通过或失败</td><td>页面能启动</td></tr>
+    <tr><td>2</td><td><code>.agent/tmp/away-check.py</code></td><td>正式页面</td><td>一句话、累计分钟、截图</td><td>「不在场」走候选</td></tr>
+    <tr><td>3</td><td><code>.agent/tmp/decide-compare.py</code></td><td>正式页面，两次独立打开</td><td>两张截图、两个时钟</td><td>同 2</td></tr>
+    <tr><td>4</td><td><code>.agent/tmp/panel-check.py</code></td><td>正式页面</td><td>面板坐标、是否重叠</td><td>面板已移到底部</td></tr>
+    <tr><td>5</td><td><code>scratch/milestone-wave3-s1/test-store.cjs</code></td><td>存档模块</td><td>14 项</td><td>无页面</td></tr>
+    <tr><td>6</td><td><code>scratch/milestone-wave3-s3/tests.cjs</code></td><td>事件模块</td><td>15 项</td><td>无页面</td></tr>
+  </table>
+  <p>5 和 6 不打开页面，验的是模块本身。1 到 4 都从正式页面出发，所以页面一改，这四项都要重跑。2、3、4 是今天新加的，只覆盖候选这一条链路；1 覆盖整页。</p>
+
+  <h2>为什么这样测</h2>
+  <table>
+    <tr><th>步骤</th><th>这样做，为什么对</th><th>不这样做，为什么错</th></tr>
+    <tr><td>1 先点台上的按钮</td><td>观众只认这个按钮。测它才测到真实入口。</td><td>只测实验面板，会把没人点的路径当成已交付。</td></tr>
+    <tr><td>2 读一句话而不是读 JSON</td><td>验收的是观众能看懂的内容。</td><td>断言整包 JSON，改一个无关字段就误报，而且看不出讲没讲清楚。</td></tr>
+    <tr><td>3 两次独立打开</td><td>划走和留下互不污染，各自从同一个 4310 出发。</td><td>在同一次里先划走再留下，第二次的起点已经变了，对不上。</td></tr>
+    <tr><td>4 量面板位置</td><td>「不挡界面」是个矩形问题，量得到。</td><td>只看截图会把「看起来还行」当成「没有重叠」。</td></tr>
+    <tr><td>5 回归用原脚本</td><td>原有 70 多项不变，才能说明没改坏别的。</td><td>新写一套回归，旧的破损不会被发现。</td></tr>
+    <tr><td>6 模块测试不代替页面</td><td>模块对只说明规则对，不说明按钮接到了规则上。</td><td>拿 14 项、15 项的通过宣布台上可用，中间的接线没有被测到。</td></tr>
+  </table>
+</main>
+</body>
+</html>

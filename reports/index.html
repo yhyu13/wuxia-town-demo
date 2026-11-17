@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>武侠小镇 · 报告存档 2026-11-16 / 11-17</title>
+<style>
+:root{--ink:#1b1815;--muted:#6a6058;--line:#e5ded4;--paper:#faf7f2;--card:#fff;
+--g:#2f7d4f;--gbg:#e9f4ed;--y:#9a6b12;--ybg:#fbf1df;--r:#a63d2f;--rbg:#fbeae7;--accent:#8a5a2b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 "Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:0 18px 60px}
+header{background:linear-gradient(155deg,#f7efe4,#fff 60%,#f2ede4);border-bottom:1px solid var(--line);padding:38px 0 24px;margin-bottom:22px}
+h1{font-size:27px;margin:0 0 6px}
+.meta{color:var(--muted);font-size:13px}
+h2{font-size:19px;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.day{display:flex;align-items:baseline;gap:10px;margin:20px 0 6px}
+.day b{font-size:15px} .day span{font-size:12.5px;color:var(--muted)}
+.card{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:9px 0;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
+.card:hover{border-color:#cbb79b;transform:translateY(-1px)}
+.card .t{font-weight:700;font-size:15px;color:#2b241d}
+.card .d{font-size:12.5px;color:var(--muted);margin-top:3px}
+.card .tag{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:600;margin-left:6px;vertical-align:1px}
+.tag.g{background:var(--gbg);color:var(--g)} .tag.y{background:var(--ybg);color:var(--y)} .tag.r{background:var(--rbg);color:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:13px;background:#fff;margin:8px 0}
+th,td{border:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{background:#f6f1e9;white-space:nowrap}
+.note{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:12px 15px;font-size:13px;color:#3b332c}
+.wf{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#f6f1e9;border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;line-height:1.7}
+.big{font-size:20px;font-weight:700}
+.g{color:var(--g)} .y{color:var(--y)} .r{color:var(--r)}
+footer{margin-top:36px;border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--muted)}
+</style></head><body>
+<header><div class="wrap">
+<h1>武侠小镇 · 报告存档</h1>
+<p class="meta">2026-11-16 / 2026-11-17 · 两份独立口径，别混着看<br>
+单文件离线报告，无外部依赖、无统计脚本。演示站：<a href="https://yhyu13.github.io/wuxia-town-demo/">yhyu13.github.io/wuxia-town-demo</a></p>
+</div></header>
+<div class="wrap">
+
+<div class="note">
+<b>先看这句：</b>11-16 的 82% 和 11-17 的 45–55% 不是同一把尺子。11-17 重跑闸门后发现 11-16 的权重表算错（表内实为 20/30 = 67%），并把三项「只有控制台能触发」的能力从绿/黄降为红。<b>数字变小，是因为判定变严，不是因为代码变差。</b>
+</div>
+
+<div class="day"><b>2026-11-16</b><span>日内快照与收口版</span></div>
+<a class="card" href="./2026-11-16-day.html">
+  <div class="t">日间报告 · 11-16 <span class="tag y">快照</span></div>
+  <div class="d">当天 19:18 的进度：夜间候选打通、面板收底、SOP 13/21。数字已过时，只作历史。</div>
+</a>
+<a class="card" href="./2026-11-16-night.html">
+  <div class="t">夜间报告 · 11-16 <span class="tag y">快照</span></div>
+  <div class="d">凌晨那一段：3 个 PR 合入、隔离候选与拒绝、单文件 9.35 MB。只作历史。</div>
+</a>
+<a class="card" href="./2026-11-16-closeout-82.html">
+  <div class="t">收口版 · 11-16（82% 口径） <span class="tag r">已被复核修正</span></div>
+  <div class="d">主干上那份：12 个 Feature、绿 8 项、23/28 权重。算术与三项判定在 11-17 被修正，保留作对照。</div>
+</a>
+
+<div class="day"><b>2026-11-17</b><span>独立复核与方案</span></div>
+<a class="card" href="./2026-11-17-closeout.html">
+  <div class="t">Feature 收口独立复核 <span class="tag g">主报告</span></div>
+  <div class="d">重跑 168/77、13 项探针、真实拖动与距离测量；14 个 Feature 红黄绿、45% / 55%、Before/After、真实录屏 GIF、6 张 Mermaid、证据索引。</div>
+</a>
+<a class="card" href="./2026-11-17-v2-plan.html">
+  <div class="t">V2 突破方案 <span class="tag y">方案</span></div>
+  <div class="d">画面（后处理/PBR/灯光）、音效与 UI 反馈、Agent 需求与记忆、Decision API（导演层 + 预烘焙 + 缓存重放）。18 人天，两条并行约 10 个工作日。</div>
+</a>
+<a class="card" href="./2026-11-17-submit-checklist.html">
+  <div class="t">参赛提交清单 <span class="tag y">可交互</span></div>
+  <div class="d">37 项、100 分权重、红黄绿三态勾选、百分比实时重算；含 P0、34 小时排期、丢分话术。状态存本机。</div>
+</a>
+
+<h2>给自己打个分：11-16 → 11-17</h2>
+<p class="meta">这是「复核与汇报工作」的分，不是游戏完成度。每条都能对着两份报告核。</p>
+<table>
+<tr><th>维度</th><th>权重</th><th>11-16</th><th>11-17</th><th>差在哪</th></tr>
+<tr><td>证据可复现</td><td>30%</td><td>5</td><td class="g">8</td><td>16 引用不入库日志；17 当天重跑 168/77、13 项探针、真实鼠标与距离测量</td></tr>
+<tr><td>判定正确性</td><td>25%</td><td>5</td><td class="g">9</td><td>16 权重表算成 23/28（实为 20/30），三项过度宣称；17 重算、下调、交叉验证，并剔除了一条错误的分 agent 结论</td></tr>
+<tr><td>覆盖完整度</td><td>15%</td><td>7</td><td class="g">9</td><td>12 → 14 个 Feature + 父仓指针 + 口径 + 16 项清单</td></tr>
+<tr><td>可视化</td><td>15%</td><td>6</td><td class="g">9</td><td>3 张手绘 SVG → 真实 GIF、Before/After 截图、6 张 Mermaid、Mind map、管理图表</td></tr>
+<tr><td>可执行性</td><td>15%</td><td>6</td><td class="g">9</td><td>无 ETA → 每项 ETA、6 条最小修复提案、3 个决策项</td></tr>
+<tr><td><b>加权</b></td><td><b>100%</b></td><td><b>56</b></td><td><b class="g">87</b></td><td><b>+31 分</b>（相对 +55%）</td></tr>
+</table>
+
+<h3 style="font-size:15px;margin:18px 0 6px">产品分为什么从 82 掉到 47：把差距拆开</h3>
+<div class="wf">82%  11-16 自称（23/28）
+-15   权重表算术：按它自己的表只有 20/30 = 67%
+-10   换城、躲法：只有控制台能写破坏记录，玩家路径不可达
+-10   打守卫只写 aim（实测离守卫 17.4 → 20.0 米）；胜负靠钩子而非玩法
+ +0   客栈模型落地（+1 绿项），被「谁在管它」入口丢失抵消
+----
+47%  11-17 严格口径（黄按半分 57%）</div>
+<p class="meta">换句话说：82 → 47 里，约 15 个点是改错，20 个点是改标准；真实产品这 24 小时净进步约 +1 个绿项（客栈），同时暴露 1 个新回归（旧「谁在管它」入口）。</p>
+
+<h2>这份存档怎么用</h2>
+<ul class="meta">
+<li><b>对外只给 11-17 的主报告</b>；11-16 两份快照数字过时，不要给评委。</li>
+<li>评审只认在线链接（说明书、视频、工作台、公网 demo）；这些报告是证据素材，不是提交物。</li>
+<li>11-17 的清单页可以自己勾，状态只在你这台浏览器里。</li>
+</ul>
+</div>
+<footer><div class="wrap">静态页面，无 cookie、无统计。报告内容为团队内部复盘口径；11-16 与 11-17 的判定差异已在页内说明。</div></footer>
+</body></html>

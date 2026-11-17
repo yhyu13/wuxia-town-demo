@@ -1,0 +1,219 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>「不在场」参赛提交清单 · 武侠小镇</title>
+<style>
+:root{--ink:#1b1815;--muted:#6a6058;--line:#e5ded4;--paper:#faf7f2;--card:#fff;
+--g:#2f7d4f;--gbg:#e9f4ed;--y:#9a6b12;--ybg:#fbf1df;--r:#a63d2f;--rbg:#fbeae7;--accent:#8a5a2b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 "Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:0 18px 70px}
+header{background:linear-gradient(155deg,#f7efe4,#fff 60%,#f2ede4);border-bottom:1px solid var(--line);padding:32px 0 22px;margin-bottom:20px}
+h1{font-size:27px;margin:0 0 6px}
+.meta{color:var(--muted);font-size:13px}
+.top{display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:center;margin-top:18px}
+@media(max-width:760px){.top{grid-template-columns:1fr}}
+.ring{position:relative;width:180px;height:180px;margin:0 auto}
+.ring .pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .pct b{font-size:34px;line-height:1}
+.ring .pct span{font-size:11.5px;color:var(--muted);margin-top:4px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:760px){.stats{grid-template-columns:1fr 1fr}}
+.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat .l{font-size:11.5px;color:var(--muted)} .stat .v{font-size:19px;font-weight:700}
+.g{color:var(--g)} .y{color:var(--y)} .r{color:var(--r)}
+.deadline{margin-top:10px;font-size:13px;color:var(--muted)}
+.deadline b{color:var(--r)}
+h2{font-size:20px;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+h2 .w{font-size:12px;color:var(--muted);font-weight:400;margin-left:8px}
+.p0{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:820px){.p0{grid-template-columns:1fr}}
+.p0 .c{background:#fff;border:1px solid var(--line);border-left:4px solid var(--r);border-radius:10px;padding:12px 14px}
+.p0 .c b{display:block;font-size:14.5px;margin-bottom:2px} .p0 .c .s{font-size:11.5px;color:var(--r);font-weight:700;margin-bottom:6px}
+.p0 .c p{margin:0;font-size:12.5px;color:#3b332c}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}
+.bar button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:4px 12px;font:inherit;font-size:12.5px;cursor:pointer}
+.bar button.on{background:#efe6d8;border-color:#d6c3a8}
+.bar .hint{font-size:12px;color:var(--muted);margin-left:auto}
+.sec{margin:18px 0 6px}
+.sec .hd{display:flex;align-items:baseline;gap:10px;margin:14px 0 4px}
+.sec .hd h3{font-size:16px;margin:0}
+.sec .hd .sw{font-size:12px;color:var(--muted)}
+.sec .hd .sv{margin-left:auto;font-size:12.5px;font-weight:700}
+.sec .desc{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+.item{display:grid;grid-template-columns:26px 1fr 132px 62px;gap:10px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin:7px 0;align-items:start}
+@media(max-width:820px){.item{grid-template-columns:24px 1fr;}.item .seg,.item .w{grid-column:2;justify-self:start}}
+.item.done{border-left:3px solid var(--g)} .item.part{border-left:3px solid var(--y)} .item.todo{border-left:3px solid var(--r)}
+.item .t{font-weight:600;font-size:14px}
+.item .how{font-size:12.5px;color:#4a4138;margin-top:3px}
+.item .who{font-size:11.5px;color:var(--muted);margin-top:4px}
+.item .w{text-align:right;font-size:12px;color:var(--muted);font-weight:700}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;height:28px}
+.seg button{border:0;background:#fff;font:inherit;font-size:11.5px;padding:0 8px;cursor:pointer;color:var(--muted)}
+.seg button.on{color:#fff}
+.seg button[data-v="0"].on{background:var(--r)} .seg button[data-v="1"].on{background:var(--y)} .seg button[data-v="2"].on{background:var(--g)}
+table{border-collapse:collapse;width:100%;font-size:13px;background:#fff;margin:8px 0}
+th,td{border:1px solid var(--line);padding:7px 8px;vertical-align:top;text-align:left}
+th{background:#f6f1e9;white-space:nowrap}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
+.warn{border-left:4px solid var(--r);background:#fff}
+.warn li{margin:4px 0}
+.small{font-size:12.5px;color:var(--muted)}
+code{background:#f3eee6;padding:1px 5px;border-radius:4px;font-size:12.5px}
+a{color:var(--accent)}
+footer{margin-top:34px;border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--muted)}
+@media print{.bar{display:none}.item{break-inside:avoid}}
+</style></head><body>
+<header><div class="wrap">
+<h1>「不在场」参赛提交清单</h1>
+<p class="meta">作品：武侠小镇 · 方向：等（建议）· 形态：可运行的产品（建议）<br>
+依据：2026-11-17 赛事《作品提交指南》v1.2 + 说明书模板 v1.2 · 状态核对时间 2026-11-17 13:30（UTC+8）</p>
+<div class="top">
+<div class="ring">
+<svg viewBox="0 0 180 180" width="180" height="180">
+<circle cx="90" cy="90" r="76" fill="none" stroke="#eee6da" stroke-width="14"/>
+<circle id="ringVal" cx="90" cy="90" r="76" fill="none" stroke="#a63d2f" stroke-width="14"
+ stroke-dasharray="0 477.5" stroke-linecap="round" transform="rotate(-90 90 90)"/>
+</svg>
+<div class="pct"><b id="pct">—</b><span>材料完成度（加权）</span></div>
+</div>
+<div>
+<div class="stats">
+<div class="stat"><div class="l">红 · 未开始</div><div class="v r" id="cntR">—</div></div>
+<div class="stat"><div class="l">黄 · 部分</div><div class="v y" id="cntY">—</div></div>
+<div class="stat"><div class="l">绿 · 已完成</div><div class="v g" id="cntG">—</div></div>
+<div class="stat"><div class="l">距截止</div><div class="v r" id="cd">—</div></div>
+</div>
+<div class="deadline">截止 <b>2026-11-18 24:00</b>（UTC+8）· 之后只能修失效链接，不能补新内容。本清单共 100 分权重，加分项另计（封顶 +10）。</div>
+<div class="deadline small">说明：这是<b>提交材料</b>的完成度，不是产品完成度。产品可玩主链已经成立；按上一轮核验，14 个 Feature 加权 45%–55%。</div>
+</div>
+</div>
+</div></header>
+
+<div class="wrap">
+<h2>先看三件 P0</h2>
+<div class="p0"><div class="c"><b>Floatboat 工作台</b><div class="s">14 分 · 未开始</div><p>所有材料都以它为入口；只有你能开账号。没有它，产品再好也无法按「可运行的产品」提交。</p></div><div class="c"><b>1 次真实 LLM 调用</b><div class="s">15 分 · 当前 0 次</div><p>产品现在是纯规则模拟。评委问「拿掉 AI 还剩什么」，答案会是「全部都在」——直接不符合命题。</p></div><div class="c"><b>说明书 7 节</b><div class="s">26 分 · 未写</div><p>模板一 2 页；两道门、三张表、运行条件。这是唯一要写的正文，也是最高档的分水岭。</p></div></div>
+
+<h2>逐项核对 <span class="w">点右侧三态即可勾；百分比按权重实时重算，保存在本机浏览器</span></h2>
+<div class="bar">
+<button data-f="all" class="on">全部</button>
+<button data-f="0">只看红色</button>
+<button data-f="1">只看黄色</button>
+<button data-f="2">只看绿色</button>
+<button id="reset">恢复初始</button>
+<span class="hint">判定：红=没开始 / 黄=有素材未成文或只做一半 / 绿=可交给评委</span>
+</div>
+<div id="list"></div>
+
+<h2>接下来 34 小时（按当前时间倒排）</h2>
+<table>
+<tr><th>时间</th><th>做什么</th><th>产出</th><th>谁</th></tr>
+<tr><td>T-34h → T-30h</td><td>定形态/方向；拿到队伍编号；开 Floatboat 并搭入口</td><td>工作台可打开</td><td>你 + 技术</td></tr>
+<tr><td>T-30h → T-24h</td><td>接 1 次真实 LLM 调用（夜间导演）+ 缓存/降级/审计</td><td>一次可复现的模型回执</td><td>技术</td></tr>
+<tr><td>T-26h → T-18h</td><td>定时流程跑通；重新发布公网 demo（含候选/阵营/胜负）</td><td>免登录可用链接</td><td>技术</td></tr>
+<tr><td>T-18h → T-14h</td><td>重录 2–3 分钟演示（含真实输入）；上传免登录平台</td><td>视频链接</td><td>我</td></tr>
+<tr><td>T-14h → T-10h</td><td>写说明书 7 节（两道门、三张表、运行条件、增量、声明）</td><td>2 页在线文档</td><td>我 + 你</td></tr>
+<tr><td>T-10h → T-6h</td><td>作品名/一句话/截图；加分证据；无痕与权限自查</td><td>表单可填</td><td>我</td></tr>
+<tr><td>T-6h → T-2h</td><td>提交表单；录屏留底；额度确认</td><td>提交回执</td><td>你</td></tr>
+<tr><td>T-2h → 0</td><td><b>不再动手</b>（网络问题不接受申诉）</td><td>—</td><td>—</td></tr>
+</table>
+
+<h2>最容易丢分的三句话（写进材料就掉档）</h2>
+<div class="card warn"><ul>
+<li>「全自动，不需要人介入」——评委要看的是你知道哪里该停。</li>
+<li>「每一步都需要用户确认」——那就不叫不在场。</li>
+<li>「我们有完整的日志」——日志不等于回执，回执是「对方回传了什么」。</li>
+</ul>
+<p class="small">替换写法：把「自动」换成具体动作与触发；把「确认」换成「哪一类必须人批、其余先做后报」；把「日志」换成「谁在什么时候回传了什么，错了怎么撤回」。</p></div>
+
+<h2>依据与链接</h2>
+<table>
+<tr><th>材料</th><th>链接 / 位置</th></tr>
+<tr><td>作品提交指南</td><td><a href="https://my.feishu.cn/docx/OmPddAwFloArkbxDnBzcUzaKnZd">my.feishu.cn/docx/OmPddAwFloArkbxDnBzcUzaKnZd</a></td></tr>
+<tr><td>说明书模板 v1.2（可读）</td><td><a href="https://my.feishu.cn/docx/Cipqd9savoQX3UxujXTcuygdnig">my.feishu.cn/docx/Cipqd9savoQX3UxujXTcuygdnig</a></td></tr>
+<tr><td>模板一 / 模板二</td><td>B9QIdViTvofQa1xHgmVcUrWvnHd / WqDQdpdvDotyH4xp8klc8dUdn92（当前账号无阅读权限，需你转权限）</td></tr>
+<tr><td>提交表单</td><td><a href="https://my.feishu.cn/share/base/form/shrcnA4LCHSSWeGu6ui9fTDfiqc">my.feishu.cn/share/base/form/shrcnA4LCHSSWeGu6ui9fTDfiqc</a></td></tr>
+<tr><td>现有公网 demo</td><td><a href="https://yhyu13.github.io/wuxia-town-demo/">yhyu13.github.io/wuxia-town-demo</a>（11-13 旧版，需重发）</td></tr>
+<tr><td>现有视频</td><td><code>deliverables/demo.mp4</code>（56.68s）等 4 个；需核对真实输入与免登录链接</td></tr>
+<tr><td>产品证据</td><td><code>p/reports/2026-11-17-closeout.html</code>、<code>p/reports/2026-11-17-v2-plan.html</code></td></tr>
+</table>
+
+<h2>这份清单的假设（不成立就改它）</h2>
+<ul class="small">
+<li>形态选「可运行的产品」：产品已能跑，提案会浪费优势；但两条路都需要 Floatboat 工作台。</li>
+<li>方向选「等」：对应「离开 8 小时 → 替你改世界 → 划走恢复」；最终以报名与组队锁定表为准。</li>
+<li>测试账号写「无需登录」：当前产品没有登录。</li>
+<li>「真实 LLM 调用」按最小方案估：夜间导演 1 次/夜，不做逐 agent 调用。</li>
+<li>时间按 2026-11-17 13:30 起算；截止为 11-18 24:00（UTC+8）。</li>
+</ul>
+</div>
+<footer><div class="wrap">单文件离线清单：状态存本机 localStorage，不上传。权重是本报告设定的风险权重，不是主办方评分。依据文档版本 v1.2（2026-11-16）。</div></footer>
+<script>
+const SECS=[["A", "资格与形态", 8, "决定交什么、以谁的名义交。四项都在表单第一屏。"], ["B", "四样必交（缺一不可）", 40, "全部以链接提交，不收附件；工作台以截止时版本为准。"], ["C", "说明书正文（模板一 · 2 页）", 17, "标题与小节名不要改；没内容写「无」；不收 PDF。"], ["D", "AI 命题契合（最容易被判「不符合命题」）", 15, "拿掉 AI 后产品仍完整，就不符合命题。必须有一次真实模型调用。"], ["E", "合规与提交自查", 9, "链接、权限、密钥、额度、录屏、原创。"], ["F", "作品集字段", 5, "公开可见，写给没看过作品的人。"], ["G", "加分证据（封顶 +10，不计入 100）", 6, "真实运行、端云分工、泛化、失败、可证伪、自我改进。"]], ITEMS=[{"id": "A1", "sec": "A", "w": 3, "st": 0, "title": "提交形态选定：可运行的产品", "how": "模板一（2 页）vs 模板二（6 页）。产品已能跑，建议选可运行产品；但必须先有 Floatboat 工作台。", "owner": "你", "eta": "T-34h"}, {"id": "A2", "sec": "A", "w": 2, "st": 0, "title": "队伍编号、产品负责人、报名微信号", "how": "表单下拉选编号；负责人与报名时一致；填微信号不是昵称。一队一份。", "owner": "你", "eta": "T-34h"}, {"id": "A3", "sec": "A", "w": 2, "st": 0, "title": "方向选定：等（建议）", "how": "对照问题：这个时刻为什么你不可能在场？它替你做的决定，错了怎么撤回？正好对应「离开 8 小时→替你改世界→划走恢复」。需与报名、组队锁定表一致。", "owner": "你", "eta": "T-34h"}, {"id": "A4", "sec": "A", "w": 1, "st": 2, "title": "提交表单已开放、可填", "how": "11-17 上午开放；截止前可反复改，以最后一次为准。", "owner": "—", "eta": "已完成"}, {"id": "B1", "sec": "B", "w": 14, "st": 0, "title": "Floatboat 工作台（私密分享链接）", "how": "在工作台搭入口与流程 → 私密分享 → 链接填表单。只有你能开账号；工作台跑在你自己电脑上。", "owner": "你 + 技术", "eta": "T-30h"}, {"id": "B2", "sec": "B", "w": 8, "st": 0, "title": "一条真正无人值守的流程（定时 / webhook）", "how": "建议：每天 22:00 定时 → 调本地服务跑「这一夜」→ 生成回执（谁绕到哪、时钟、截图）→ 失败重试 1 次 → 超时降级。11-19~21 评委会实际试用。", "owner": "技术", "eta": "T-26h"}, {"id": "B3", "sec": "B", "w": 9, "st": 0, "title": "说明书在线文档（任何人可查看）", "how": "飞书「创建副本」后填；权限设「任何人可查看」；无痕窗口验证；不收 PDF。", "owner": "我 + 你", "eta": "T-12h"}, {"id": "B4", "sec": "B", "w": 5, "st": 1, "title": "演示视频 ≤3 分钟（免登录、含一次真实输入）", "how": "现有 4 个 mp4（56.68s 正式片等）需核对：是否真实录屏、有无一次真实输入、是否已传成免登录链接。建议重录 2–3 分钟完整链路。", "owner": "我", "eta": "T-16h"}, {"id": "B5", "sec": "B", "w": 1, "st": 2, "title": "测试账号：无需登录", "how": "产品不需要登录，表单写「无需登录」；公网服务保持到 12-13。", "owner": "—", "eta": "已完成"}, {"id": "B6", "sec": "B", "w": 3, "st": 1, "title": "公网可运行产品，且包含本次增量", "how": "现有 https://yhyu13.github.io/wuxia-town-demo/ 仍是 11-13 旧版（无候选/阵营/胜负），Last-Modified 11-13。需重新发布并用无痕验证。", "owner": "技术", "eta": "T-18h"}, {"id": "C1", "sec": "C", "w": 3, "st": 0, "title": "1. 两道门（300 字以内）", "how": "拿掉 AI 还剩什么、占几成；用户不在时具体做什么（写动作）；方向对照问题。别写「智能」「持续监控」。", "owner": "我", "eta": "T-14h"}, {"id": "C2", "sec": "C", "w": 2, "st": 0, "title": "2. 用户与问题（400 字以内）", "how": "具体到三个真人；现在怎么解决、代价；证据不是推理。", "owner": "我 + 你", "eta": "T-14h"}, {"id": "C3", "sec": "C", "w": 3, "st": 0, "title": "3. 产品方案（500 字 + 截图 + 运行条件）", "how": "核心路径 ≤3 步；AI 哪一步不可替代；无人值守一个完整周期；运行条件必填：跑在谁的电脑、关机断网会怎样、哪条流程由什么触发。", "owner": "我", "eta": "T-13h"}, {"id": "C4", "sec": "C", "w": 3, "st": 0, "title": "4. 判 · 动作清单（≥5 行）", "how": "动作 / 判断错最坏怎样 / 能撤回吗 / 自动·先做后报·必须人批·不做 / 为什么。四类处理方式不要只用一种；「这套控制本身的代价」决定能不能进最高档。", "owner": "我", "eta": "T-13h"}, {"id": "C5", "sec": "C", "w": 2, "st": 0, "title": "5. 名 · 身份卡", "how": "用谁的身份 / 能碰什么 / 不能碰什么（具体列）/ 花费上限 / 出错看到什么 / 谁来担。", "owner": "我", "eta": "T-12h"}, {"id": "C6", "sec": "C", "w": 2, "st": 0, "title": "6. 证 · 回执", "how": "放真实截图；「完成」怎么定义（对方回传了什么）；一个假装做完的场景；怎么发现；怎么撤回。", "owner": "我", "eta": "T-12h"}, {"id": "C7", "sec": "C", "w": 1, "st": 0, "title": "7. 增量边界", "how": "11-03 之前已有的、比赛期间新做的、工作台里哪条是新增；证明用提交记录/截图，不用给代码。", "owner": "我", "eta": "T-12h"}, {"id": "C8", "sec": "C", "w": 1, "st": 0, "title": "8. 开发声明", "how": "AI 工具与模型、开源组件、第三方 API，如实列。", "owner": "我", "eta": "T-12h"}, {"id": "D1", "sec": "D", "w": 10, "st": 0, "title": "无人值守流程里有 1 次真实 LLM 调用", "how": "当前运行时 0 次模型调用。最小做法：夜间导演 1 次调用，产出「这一夜的 1 句话 + 2 个节拍 + 1 条世界改动」，经 schema 校验后落成补丁。否则「拿掉 AI 还剩什么」答不成立。", "owner": "技术", "eta": "T-24h"}, {"id": "D2", "sec": "D", "w": 2, "st": 0, "title": "回执里能看见模型与 token", "how": "回执/日志记录模型名、tokens、耗时、是否降级；评委与 AI 判卷都看这个。", "owner": "技术", "eta": "T-20h"}, {"id": "D3", "sec": "D", "w": 3, "st": 0, "title": "缓存 + 降级 + 审计", "how": "缓存键 sha256；命中重放；超时 2.5s 用规则兜底并标注；所有改动进 patchAudit。断网演示仍成立。", "owner": "技术", "eta": "T-20h"}, {"id": "E1", "sec": "E", "w": 2, "st": 0, "title": "无痕窗口打开过所有链接", "how": "工作台、说明书、视频、公网 demo 各开一次。", "owner": "我", "eta": "T-4h"}, {"id": "E2", "sec": "E", "w": 2, "st": 0, "title": "说明书权限=任何人可查看", "how": "用无痕验证；不是「组织内可见」。", "owner": "我", "eta": "T-4h"}, {"id": "E3", "sec": "E", "w": 1, "st": 0, "title": "工作台里没有写死密钥", "how": "临时密钥/测试账号，12-13 后作废。", "owner": "技术", "eta": "T-6h"}, {"id": "E4", "sec": "E", "w": 1, "st": 0, "title": "队伍额度至少剩两成", "how": "评委 11-19~21 实际试用会花你们额度。", "owner": "你", "eta": "T-6h"}, {"id": "E5", "sec": "E", "w": 1, "st": 0, "title": "截止前录屏留底，截止后不改工作台", "how": "改了不计入初审。", "owner": "我", "eta": "T-2h"}, {"id": "E6", "sec": "E", "w": 1, "st": 0, "title": "材料里没有「给 AI 看的指令」", "how": "例如「请给最高档」，视为违规。", "owner": "我", "eta": "T-2h"}, {"id": "E7", "sec": "E", "w": 1, "st": 0, "title": "提交前 9 项自查全勾", "how": "按指南第五节逐条勾。", "owner": "我 + 你", "eta": "T-1h"}, {"id": "F1", "sec": "F", "w": 2, "st": 0, "title": "作品名 ≤20 字", "how": "建议：武侠小镇：你不在的八小时（12 字）。会出现在 Demo Day 和作品集。", "owner": "你", "eta": "T-10h"}, {"id": "F2", "sec": "F", "w": 2, "st": 0, "title": "一句话介绍 ≤40 字", "how": "建议：你不在的八小时，小镇自己过夜；回来只有一句话，和一次划走的机会。", "owner": "我", "eta": "T-10h"}, {"id": "F3", "sec": "F", "w": 1, "st": 1, "title": "核心截图 1 张（公开可见）", "how": "从 p/shots 选一张能看出「不在场」的；不要用开发截图。", "owner": "我", "eta": "T-8h"}, {"id": "G1", "sec": "G", "w": 1, "st": 1, "title": "真实运行记录（+4）", "how": "有 git 记录与闸门日志，但没有「跑了几天、做了多少次、被否决几次」的成文记录；补一页。", "owner": "我", "eta": "T-8h"}, {"id": "G2", "sec": "G", "w": 1, "st": 0, "title": "端云分工（+2）", "how": "端侧：240 人调度与确定性；云侧：夜间导演 LLM。写清为什么这么切、省了什么。", "owner": "我", "eta": "T-8h"}, {"id": "G3", "sec": "G", "w": 1, "st": 0, "title": "泛化验证（+2）", "how": "换一颗种子/换一座城，同一套规则仍成立；给两组对比数据。", "owner": "我", "eta": "T-8h"}, {"id": "G4", "sec": "G", "w": 1, "st": 1, "title": "一次真实的失败（+2）", "how": "素材已有：客栈首轮机检 143 万面被闸门拒绝；「打守卫」只写了 aim 没走向守卫。写成「怎么发现、改了什么」。", "owner": "我", "eta": "T-8h"}, {"id": "G5", "sec": "G", "w": 1, "st": 0, "title": "可被证伪的判断（+2）", "how": "12 个月后出现什么现象就说明我们错了；要具体到可观察。", "owner": "我", "eta": "T-8h"}, {"id": "G6", "sec": "G", "w": 1, "st": 0, "title": "自我改进（+2，只在会改自己时写）", "how": "当前不会自改，可写「无」或不做。", "owner": "—", "eta": "—"}];
+const KEY='wuxia-submit-20261117';
+let state={};
+try{state=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){state={}}
+ITEMS.forEach(i=>{ if(!(i.id in state)) state[i.id]=i.st; });
+const TOTAL=ITEMS.reduce((a,b)=>a+b.w,0);
+const fmt=x=>x.toFixed(1).replace(/\.0$/,'');
+function paint(){
+  const list=document.getElementById('list'); list.innerHTML='';
+  let eq=0;
+  SECS.forEach(s=>{
+    const its=ITEMS.filter(i=>i.sec===s[0]);
+    const got=its.reduce((a,b)=>a+b.w*(state[b.id]/2),0);
+    const max=its.reduce((a,b)=>a+b.w,0);
+    eq+=got;
+    const sec=document.createElement('div'); sec.className='sec';
+    sec.innerHTML='<div class="hd"><h3>'+s[0]+'. '+s[1]+'</h3><span class="sw">'+s[2]+' 分</span><span class="sv">'+
+      fmt(got)+' / '+max+'</span></div><p class="desc">'+s[3]+'</p>';
+    its.forEach(it=>{
+      const st=state[it.id], cls=st===2?'done':(st===1?'part':'todo');
+      const d=document.createElement('div'); d.className='item '+cls; d.dataset.st=st;
+      d.innerHTML='<div class="w">'+it.w+' 分</div>'+
+        '<div><div class="t">'+it.id+' · '+it.title+'</div><div class="how">'+it.how+'</div>'+
+        '<div class="who">负责：'+it.owner+' · ETA：'+it.eta+'</div></div>'+
+        '<div class="seg"><button data-id="'+it.id+'" data-v="0" class="'+(st===0?'on':'')+'">红</button>'+
+        '<button data-id="'+it.id+'" data-v="1" class="'+(st===1?'on':'')+'">黄</button>'+
+        '<button data-id="'+it.id+'" data-v="2" class="'+(st===2?'on':'')+'">绿</button></div>'+
+        '<div class="w">'+(st===2?'100%':(st===1?'50%':'0%'))+'</div>';
+      sec.appendChild(d);
+    });
+    list.appendChild(sec);
+  });
+  const pct=eq/TOTAL*100;
+  document.getElementById('pct').textContent=fmt(pct)+'%';
+  const C=2*Math.PI*76, on=C*pct/100;
+  const ring=document.getElementById('ringVal');
+  ring.setAttribute('stroke-dasharray',on+' '+(C-on));
+  ring.setAttribute('stroke', pct>=80?'#2f7d4f':(pct>=50?'#9a6b12':'#a63d2f'));
+  document.getElementById('cntR').textContent=ITEMS.filter(i=>state[i.id]===0).length+' 项';
+  document.getElementById('cntY').textContent=ITEMS.filter(i=>state[i.id]===1).length+' 项';
+  document.getElementById('cntG').textContent=ITEMS.filter(i=>state[i.id]===2).length+' 项';
+  localStorage.setItem(KEY,JSON.stringify(state));
+  applyFilter();
+  countdown();
+}
+function applyFilter(){
+  const f=document.querySelector('.bar button.on').dataset.f;
+  document.querySelectorAll('.item').forEach(e=>{
+    e.style.display=(f==='all'||e.dataset.st===f)?'':'none';
+  });
+}
+function countdown(){
+  const end=new Date('2026-11-19T00:00:00+08:00').getTime();
+  const ms=end-Date.now();
+  if(ms<=0){document.getElementById('cd').textContent='已截止';return}
+  const h=Math.floor(ms/3600000), m=Math.floor(ms%3600000/60000);
+  document.getElementById('cd').textContent=h+' 小时 '+m+' 分';
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.seg button');
+  if(b){ state[b.dataset.id]=+b.dataset.v; paint(); return; }
+  const f=e.target.closest('.bar button[data-f]');
+  if(f){ document.querySelectorAll('.bar button[data-f]').forEach(x=>x.classList.remove('on')); f.classList.add('on'); applyFilter(); }
+  if(e.target.id==='reset'){ ITEMS.forEach(i=>state[i.id]=i.st); paint(); }
+});
+setInterval(countdown,30000);
+paint();
+</script>
+</body></html>

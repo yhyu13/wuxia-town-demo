@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>夜间闭环 · 2026-11-16 汇报</title>
+<style>
+  :root { color-scheme: light dark; --ink:#1c1915; --muted:#675f56; --line:#e4ddd3; --paper:#fbf8f4; --card:#fff; --accent:#a63d2f; --ok:#2f7d4f; --warn:#9a6b12; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#f4efe8; --muted:#b7aea4; --line:#3a342d; --paper:#16130f; --card:#221e19; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.65 "Source Han Sans SC","Noto Sans SC","Microsoft YaHei",sans-serif; }
+  main { max-width:1080px; margin:0 auto; padding:48px 24px 80px; }
+  h1 { font-size:34px; line-height:1.25; margin:0 0 8px; letter-spacing:-.4px; }
+  h2 { font-size:22px; margin:48px 0 12px; }
+  p { margin:8px 0; }
+  .muted { color:var(--muted); }
+  .hero { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:28px 0; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; }
+  .stat b { display:block; font-size:28px; line-height:1.1; }
+  .stat span { color:var(--muted); font-size:13px; }
+  figure { margin:18px 0; }
+  img { width:100%; border-radius:12px; border:1px solid var(--line); }
+  figcaption { color:var(--muted); font-size:13px; margin-top:6px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; }
+  code { font-family:ui-monospace,monospace; font-size:.92em; }
+  .bar { height:10px; background:var(--line); border-radius:99px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:var(--accent); }
+  .ok { color:var(--ok); } .warn { color:var(--warn); }
+  ol li { margin:6px 0; }
+  @media (max-width:720px) { .hero { grid-template-columns:1fr 1fr; } h1 { font-size:28px; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="muted">武侠世界 · 夜间闭环 · 2026-11-16</p>
+  <h1>昨晚推进了存档，没推进上台。</h1>
+  <p>三笔改动已进 main <code>812abd1</code>。可交付页 <code>deliverables/wuxia-town-standalone.html</code>（9.35 MB）离线打开零报错，候选生成、接受、拒绝、编号都有证据。但观众在台上点的还是旧按钮，新功能藏在一个挤满控件的面板里。</p>
+
+  <div class="hero">
+    <div class="stat"><b>3</b><span>已合并的 PR</span></div>
+    <div class="stat"><b>15 / 21</b><span>SOP 用例有证据</span></div>
+    <div class="stat"><b>4310 → 4790</b><span>离开到候选的累计分钟</span></div>
+    <div class="stat"><b>2 天</b><span>到路演</span></div>
+  </div>
+
+  <h2>现在打开是什么样</h2>
+  <figure>
+    <img src="demo-show/01-boot.png" alt="乐高沙盘启动画面，240 名居民在村、城、塞之间活动">
+    <figcaption>正式单文件页，file:// 离线打开。结构 52，代理 240/240，种子 20260818。新功能收在左下角一个「夜间候选」按钮里，不挡画面。</figcaption>
+  </figure>
+  <figure>
+    <img src="demo-show/02-panel.png" alt="展开后的夜间候选面板压住了原有界面">
+    <figcaption>展开之后。读数 seed 20260818、time 1080、pending none。面板盖住左侧原界面，按钮文字折行。</figcaption>
+  </figure>
+  <figure>
+    <img src="demo-show/03-candidate.png" alt="候选弹窗显示整屏原始 JSON">
+    <figcaption>第 3 天 23:50（累计 4310）生成候选，候选是第 4 天 07:50（累计 4790），种子不动。弹窗是一整屏 JSON，不是「这一夜发生了什么」。</figcaption>
+  </figure>
+
+  <h2>昨晚进 main 的三笔</h2>
+  <table>
+    <tr><th>PR</th><th>合并</th><th>提交</th><th>做了什么</th></tr>
+    <tr><td>#121</td><td>02:03</td><td><code>0f74ad8</code></td><td>候选与旧世界隔离。接受才提交，拒绝回到离开前，关闭后重开候选还在。</td></tr>
+    <tr><td>#122</td><td>02:14</td><td><code>9de7db2</code></td><td>方块编号只增不减。拆掉 blk-0002 再放，新块是 blk-0003。</td></tr>
+    <tr><td>#123</td><td>02:17</td><td><code>812abd1</code></td><td>勾上「禁止绕道」返回 E_NO_LEGAL_RESULT，不留候选。</td></tr>
+  </table>
+  <p class="muted">功能提交是 182564f、9f11871、18692d3。另外两笔是门禁修复：0dfbec3 让页面里的 require 不再被当成文档引用，4e492df 忽略 scratch。</p>
+
+  <h2>里程碑</h2>
+  <p>分母按 SOP 的 13 个切片。有合并代码的算推进，只有文档的不算。</p>
+  <table>
+    <tr><th>切片</th><th>状态</th><th></th></tr>
+    <tr><td>P1 隔离、接受、拒绝、故障</td><td class="ok">有代码有证据</td><td>T02–T06、T08–T11</td></tr>
+    <tr><td>P2 事件规则</td><td class="ok">有代码有证据</td><td>T12–T15</td></tr>
+    <tr><td>P3a 演出只读事件</td><td class="warn">半截</td><td>播放不结算已证，但演出是空的</td></tr>
+    <tr><td>P3b 下一次才换命运</td><td class="ok">有代码有证据</td><td>T14</td></tr>
+    <tr><td>P0 状态契约</td><td>未做</td><td>字段与存储未批准</td></tr>
+    <tr><td>P4 刚体、盟会行为</td><td>排在闭环之后</td><td>按 PRD 不在这两天</td></tr>
+    <tr><td>D1–D4、L1</td><td>未做</td><td>CI、路演、Colab、状态跟踪、在线模式</td></tr>
+  </table>
+  <p>13 个里 3 个有完整证据，1 个半截。<b>约 27%</b>。</p>
+  <div class="bar"><i style="width:27%"></i></div>
+
+  <h2>SOP 的 21 条</h2>
+  <p>有证据 15 条，未跑 6 条。<b>71%</b>。有证据不等于 SOP 意义上的通过：SOP 要求同一版本、独立复核、非作者复演，这三样都还没有。</p>
+  <div class="bar"><i style="width:71%"></i></div>
+  <table>
+    <tr><th>用例</th><th>证据</th></tr>
+    <tr><td>T02 候选不改旧世界</td><td class="ok">投影不变</td></tr>
+    <tr><td>T03 接受一次，再点无效</td><td class="ok">4310 → 4790，第二次 revision 不变</td></tr>
+    <tr><td>T04 拒绝回到离开前</td><td class="ok">回到 4310，再拒绝无效</td></tr>
+    <tr><td>T05 旧按钮失效</td><td class="ok">拒绝后再点接受，世界不变</td></tr>
+    <tr><td>T06 跨午夜</td><td class="ok">4310，候选 4790，拒绝回 4310</td></tr>
+    <tr><td>T07 编号不复用</td><td class="ok">blk-0002 拆掉后再放是 blk-0003</td></tr>
+    <tr><td>T08 候选期间不能编辑</td><td class="ok">建造被拦住</td></tr>
+    <tr><td>T09 关闭重开</td><td class="ok">候选还在。file:// 存储是注入后由页面自己读的</td></tr>
+    <tr><td>T10 中断</td><td class="ok">不留半候选，失败可见</td></tr>
+    <tr><td>T11 坏数据</td><td class="ok">拒绝并保留原文</td></tr>
+    <tr><td>T12 同输入同结果</td><td class="ok">两个独立页面，候选 id 相同</td></tr>
+    <tr><td>T13 改出场人物</td><td class="ok">候选 id 改变</td></tr>
+    <tr><td>T14 拒绝后再来一次</td><td class="ok">种子不变，下一次候选不同</td></tr>
+    <tr><td>T15 没有合法结果</td><td class="ok">E_NO_LEGAL_RESULT，不留候选</td></tr>
+    <tr><td>T16 播放不结算</td><td class="warn">世界不变，但事件列表是空的</td></tr>
+    <tr><td>T01、T17–T21</td><td>未跑</td></tr>
+  </table>
+  <p class="muted">证据文件：<code>scratch/sop-t02-t16/results.json</code>、<code>scratch/t07-block-ids/results.json</code>、<code>scratch/demo-show/state.json</code>。都在忽略目录，不进 git。</p>
+
+  <h2>哪里没推进到位</h2>
+  <ol>
+    <li><b>台上的按钮还是旧的。</b>「不在场 · 离开 8 小时」划走会换种子、清空建造。昨晚修的是面板里的新按钮。观众点旧的，修复不生效。</li>
+    <li><b>候选是一份 JSON，不是一夜。</b>接受之后三维世界看不出任何变化，变的只有时钟和存档。PRD 要的「第二天先演」没有画面。</li>
+    <li><b>面板不可用。</b>展开后盖住原界面，文字折行，输入框挤在一起。这不是能交给路演的界面。</li>
+    <li><b>证据在忽略目录里。</b>换一台机器就没了。SOP 要求的独立复核和非作者复演都没做。</li>
+  </ol>
+
+  <h2>今天的 8 小时</h2>
+  <p>目标：让台上点的那个按钮走新链路，并且候选用一句话讲出来，而不是一份 JSON。</p>
+  <table>
+    <tr><th>时间</th><th>做什么</th><th>到点能看到什么</th></tr>
+    <tr><td>第 1 小时</td><td>把「不在场」按钮接到候选生成，旧的换种子路径不再被这个按钮触发</td><td>点原按钮弹出的是候选，不是直接改世界</td></tr>
+    <tr><td>第 2–3 小时</td><td>候选窗改成一句人话：谁、做了什么、时钟从几点到几点，加上接受 / 拒绝</td><td>不再出现整屏 JSON</td></tr>
+    <tr><td>第 4 小时</td><td>接受或拒绝后世界的读数与改动前对照，补一张截图</td><td>拒绝回 4310，接受到 4790，都在画面上</td></tr>
+    <tr><td>第 5–6 小时</td><td>面板收成三步：离开、看这一夜、决定。不盖住沙盘</td><td>1600 宽下原界面可点</td></tr>
+    <tr><td>第 7 小时</td><td>跑 verify-browser 与 T02–T06，确认旧按钮的新行为不破坏 78 项</td><td>退出码 0 的日志</td></tr>
+    <tr><td>第 8 小时</td><td>提交、过门禁、合并。证据路径写进 PR</td><td>一个合并的 PR</td></tr>
+  </table>
+  <p class="muted">不做的：刚体、盟会行为、在线模式、远端 CI、Colab。那六条未跑的 SOP 用例里，今天只碰得到 T19 的前置，其余不在这两天的关键路径上。</p>
+</main>
+</body>
+</html>
