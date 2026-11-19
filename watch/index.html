@@ -1,7 +1,7 @@
 <!doctype html>
-<!-- 草稿：供负责人自行应用到 wuxia-town submodule 的 watch/index.html（Lead 不动公网/submodule）。
-     基于 2026-11-19 抓取的 live watch 页（scratch/watch-page-current.html）改写，对齐已验收的 v3（179.2 s / 18 句）。
-     应用步骤见交付消息：① 替换本文件为 watch/index.html ② 把 wuxia-demo-v3.mp4 复制为 watch/demo.mp4 ③ poster.jpg 换 v3 帧。 -->
+<!-- v4（2026-11-20）：对齐公网 play/ 2759f3e（16 破坏技能+特效/破坏面板+范围预览+粒子/守卫徽章）。
+     午夜自动结算→导演 HTTP 405 诚实提示→本地规则换城链如实拍；旁白 S2–S5 经负责人批准最小改写，其余 14 句与全部数字不动。
+     成片 178.5 s（2:58.5），真实点击无剪辑拼接；demo.mp4=wuxia-demo-v4.mp4，poster.jpg 取 v4 帧。 -->
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>武侠小镇 · 3 分钟演示</title>
@@ -23,7 +23,7 @@ footer{margin-top:30px;border-top:1px solid var(--line);padding-top:12px;font-si
 </style></head><body>
 <header><div class="wrap">
 <h1>武侠小镇 · 3 分钟演示</h1>
-<p class="meta">约 2 分 59 秒（179.2 s）· 1280×720 · 中文旁白 · 真实点击，无剪辑拼接<br>
+<p class="meta">约 2 分 59 秒（178.5 s）· 1280×720 · 中文旁白 · 真实点击，无剪辑拼接<br>
 无登录、无需下载，直接播放</p>
 </div></header>
 <div class="wrap">
@@ -35,35 +35,36 @@ footer{margin-top:30px;border-top:1px solid var(--line);padding-top:12px;font-si
 <div class="card">
 <table>
 <tr><th>时间</th><th>画面</th></tr>
-<tr><td>0:00</td><td>乐高沙盘全景，240 人，18:00</td></tr>
-<tr><td>0:09</td><td>把时间拖到夜里，点「不在场」</td></tr>
-<tr><td>0:16</td><td>候选弹窗：谁、去哪、时钟</td></tr>
-<tr><td>0:25</td><td>划走，回到离开前</td></tr>
-<tr><td>0:33</td><td>再点留下；时间拨到次日早上</td></tr>
-<tr><td>0:40</td><td>拖人：百姓可拖、守卫会飞会倒、武侠按住不动</td></tr>
-<tr><td>0:49</td><td>推倒北墙、结成武林盟</td></tr>
-<tr><td>0:57</td><td>是什么：沙盘全景慢摇，HUD 人数与种子戳</td></tr>
-<tr><td>1:09</td><td>等与痛点：白天→黑夜长镜头，夜景灯笼</td></tr>
-<tr><td>1:20</td><td>一段演出：候选一句话→拨到第四天零点，跟人走到客栈东侧</td></tr>
-<tr><td>1:33</td><td>AI 不可替代：候选一句话→锁时间空转时钟对照</td></tr>
-<tr><td>1:48</td><td>为什么现在：种子戳→同种子重建逐位一致</td></tr>
-<tr><td>2:04</td><td>过渡：夜景保持，切工作台</td></tr>
-<tr><td>2:08</td><td>工作台：入口卡与 22:00 定时流程</td></tr>
-<tr><td>2:16</td><td>回执卡：谁、去哪、时钟、截图、模型和 token、夜间指纹</td></tr>
-<tr><td>2:24</td><td>回执防伪：时钟、截图、指纹缺一不可</td></tr>
-<tr><td>2:32</td><td>失手诚实：失败标 fallback、关机断网会停</td></tr>
-<tr><td>2:42</td><td>边界与撤回</td></tr>
+<tr><td>0:00</td><td>片头：引导卡→白天沙盘落块结算（240 人、守卫「卫」徽章）</td></tr>
+<tr><td>0:09</td><td>实放「挖墙」城墙：目标预览环＋碎块粒子（16 破坏技能）</td></tr>
+<tr><td>0:18</td><td>拖时刻杆入夜，时间自己走到午夜、小镇自己结算</td></tr>
+<tr><td>0:25</td><td>午夜自动结算：一句话胜负＋「武侠已反抗」行</td></tr>
+<tr><td>0:34</td><td>导演 HTTP 405 诚实提示→点「本地模拟，非后端生成 · 换下一城」→世界重建</td></tr>
+<tr><td>0:41</td><td>破坏画像与适应面板：按上一城最多技能「挖墙」重建＋新城全景</td></tr>
+<tr><td>0:48</td><td>拖人：百姓可拖、武侠按住不动（位置锁定）</td></tr>
+<tr><td>0:57</td><td>挖墙＋落雷倒守卫：范围预览环、特效粒子、按守卫算胜负</td></tr>
+<tr><td>1:04</td><td>项目介绍：渲染档切换（泥塑/乐高）＋Ctrl 拖拽旋转视角</td></tr>
+<tr><td>1:16</td><td>方向「等」：慢拖时刻杆 日→夜长镜头，夜景灯笼</td></tr>
+<tr><td>1:27</td><td>工作台真实回执：谁、去哪、时钟、一句话</td></tr>
+<tr><td>1:40</td><td>AI 不可替代：导演理由行＋对照规则回执</td></tr>
+<tr><td>1:55</td><td>为什么现在：同缓存重放＋模型 / tokens 行（857 tokens、1.2 s）</td></tr>
+<tr><td>2:11</td><td>过渡：回工作台页首</td></tr>
+<tr><td>2:15</td><td>每天 22:00 自动跑一夜流程卡</td></tr>
+<tr><td>2:22</td><td>早上只看这一屏回执：谁、去哪、时钟、截图、模型和 token、夜间指纹</td></tr>
+<tr><td>2:31</td><td>回执防伪：夜间指纹行，时钟、截图、指纹缺一不可</td></tr>
+<tr><td>2:38</td><td>失手诚实：fallback=true、关机断网会停</td></tr>
+<tr><td>2:49</td><td>回页首：边界与撤回</td></tr>
 </table>
-<p class="meta">时间轴为旁白主体相对时间；成片另含约 7 秒片头页头，总长 179.2 s（2:59.2）。</p>
+<p class="meta">时间轴为旁白主体相对时间；成片另含约 9 秒片头页头，总长 178.5 s（2:58.5）。</p>
 </div>
 
 <div class="card">
 <p><b>旁白全文</b></p>
 <p style="font-size:13.5px">这是武侠小镇。白天它是一座乐高沙盘，二百四十个人各有各的作息；晚上，它会自己过夜。
-把时间拖到夜里，点一下不在场。你离开的这八小时，世界不会停。
-它先给你一句话：谁，绕到哪，时钟从几点走到几点。旧世界不动，你还能反悔。
-划走，就回到离开前；再点一次，它换一条命运，因为上一次的结果会被排除。
-留下，世界线就变了：这个人会在第四天零点，走到客栈东侧的那个站位点。
+时间自己走到午夜，小镇自己结算。你不在的这八小时，世界不会停。
+它先给你一句话：这一局谁还站着、算哪种胜负。旧世界存进档，你还能反悔。
+换下一局，世界就重建；上一局的破坏会被记住，新城按你的打法变。
+继续玩，世界线就变了：新城记得你的技能，该增援的地方增援、该避难的地方避难。
 人群不是贴图。百姓可以拖，守卫会飞会倒，武侠按住不动；拖动之后位置会锁住。
 推倒北墙，结成武林盟，一天结束时按守卫算胜负，不按百姓死活算。
 用一分钟介绍这个项目。武侠小镇是一个在浏览器里打开的模拟经营游戏：乐高沙盘，二百四十个人各有各的作息，不用登录，不用下载。
@@ -85,7 +86,7 @@ footer{margin-top:30px;border-top:1px solid var(--line);padding-top:12px;font-si
 工作台：<a href="https://yhyu13.github.io/wuxia-town-demo/reports/workbench/">/reports/workbench/</a> ·
 说明书：<a href="https://yhyu13.github.io/wuxia-town-demo/proposal/">/proposal/</a> ·
 报告存档：<a href="https://yhyu13.github.io/wuxia-town-demo/reports/">/reports/</a></p>
-<p class="meta">说明：视频里的回执是真实导演回执（model=deepseek-chat、857 tokens、1167 ms、夜间指纹 becc9872、降级=否）。规则回执（rule-v1、tokens=0）只作页面明确标注的失败回退对照（fallback=true）——没有缓存或模型失败时才回退规则。同缓存重放 3 次夜间指纹一致。</p>
+<p class="meta">说明：视频里的回执是真实导演回执（model=deepseek-chat、857 tokens、1167 ms、夜间指纹 becc9872、降级=否）。规则回执（rule-v1、tokens=0）只作页面明确标注的失败回退对照（fallback=true）——没有缓存或模型失败时才回退规则。同缓存重放 3 次夜间指纹一致。play 演示段为公网真实点击：午夜自动结算→导演 HTTP 405 诚实提示→本地规则换城（页面明确标注「本地模拟，非后端生成」）。</p>
 </div>
 
 <footer>录制：Playwright 真实点击 + edge-tts 旁白 + ffmpeg 合成。没有跳过步骤、没有伪造回执。</footer>
