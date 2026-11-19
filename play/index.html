@@ -45,6 +45,15 @@ button.wide{width:100%;margin-top:8px}
 #bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .1s linear}
 #stamp{position:fixed;right:16px;bottom:14px;padding:7px 13px;border-radius:10px;background:var(--panel);border:1px solid rgba(42,33,24,.1);box-shadow:0 6px 20px rgba(42,33,24,.16);font-size:12px;letter-spacing:.3px}
 #stamp b{color:var(--accent)}
+/* issue147 收尾：角落可见版本戳（规则版本 · 源码短哈希 · 构建时间），深色底保证夜景可读 */
+#buildStamp{position:fixed;right:16px;bottom:14px;z-index:30;padding:4px 10px;border-radius:8px;background:rgba(20,32,46,.82);color:#f5efe2;font-size:11px;letter-spacing:.3px;pointer-events:none}
+#stamp:not([hidden])~#buildStamp{bottom:56px}
+/* issue147 收尾：局末结论浅色底面板 + 「下一局」按钮，夜景下可读、file:// 可用 */
+#verdictPanel{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:40;display:none;align-items:center;gap:12px;max-width:min(680px,92vw);padding:10px 16px;border-radius:12px;background:var(--panel);border:1px solid rgba(42,33,24,.18);box-shadow:0 8px 24px rgba(20,16,12,.35)}
+#verdict{font-size:16px;line-height:1.5;color:var(--ink)}
+#nextRound{flex:none;padding:6px 14px;font-size:14px;background:var(--accent);border-color:var(--accent);color:#fff}
+#nextRound:hover{background:#8f3325}
+@media (max-width:600px){#buildStamp{right:8px;bottom:8px;font-size:10px;max-width:70vw}#stamp:not([hidden])~#buildStamp{bottom:44px}#verdictPanel{gap:8px;padding:8px 12px}#verdict{font-size:14px}}
 #fatal{position:fixed;inset:0;display:none;place-items:center;padding:40px;text-align:center;background:#e8e2d8}
 #fileInput{display:none}
 #inspect{position:fixed;right:16px;top:16px;display:none;max-width:270px;padding:10px 14px;border-radius:12px;background:var(--panel);border:1px solid rgba(42,33,24,.18);box-shadow:0 8px 24px rgba(42,33,24,.22);font-size:12px;line-height:1.6;z-index:15}
@@ -57,11 +66,30 @@ button.wide{width:100%;margin-top:8px}
 #license label{display:block;font-size:12px;margin:8px 0 2px;opacity:.75}
 #license input{width:100%;padding:4px 8px;border:1px solid rgba(42,33,24,.25);border-radius:7px;font:inherit}
 #license button{margin-top:12px;width:100%;background:var(--accent);border-color:var(--accent);color:#fff}
+#guide{position:fixed;left:50%;top:9%;transform:translateX(-50%);z-index:70;width:min(430px,92vw);padding:16px 18px;border-radius:14px;background:var(--panel);border:2px solid var(--accent);box-shadow:0 18px 50px rgba(20,16,12,.4);display:none;pointer-events:none}
+#guide h3{margin:0 0 8px;font-size:15px;color:var(--accent)}
+#guide ol{margin:0 0 10px;padding-left:19px;font-size:12.5px;line-height:1.75}
+#guide button{margin-top:6px;width:100%;background:var(--accent);border-color:var(--accent);color:#fff;pointer-events:auto}
+#legend{margin:6px 0 0;font-size:11.5px;line-height:1.75;opacity:.85}
+#rebel{margin:6px 0 0;font-size:12px;font-weight:700;color:var(--accent)}
+#rebel[hidden]{display:none}
+.gmark{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font:700 10px/1 sans-serif;color:#eaf3ff;background:#1b4f8adf;border-radius:4px;padding:2px 3px;pointer-events:none;z-index:6;display:none}
 </style>
 <style>#integrationPanel{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:25;font:12px sans-serif}#integrationFold{padding:6px 12px;border-radius:10px;background:#14202eee;color:#fff;border:0;cursor:pointer}#integrationBody{position:absolute;left:50%;bottom:42px;transform:translateX(-50%);width:360px;background:#14202eee;color:#fff;padding:14px;z-index:25;font:12px sans-serif;max-height:70vh;overflow:auto}#integrationPanel input{width:65px}#integrationPanel button,#integrationPanel select{margin:4px;padding:6px 10px;background:#2a211c;color:#fff;border:1px solid #6b5a48;border-radius:8px;cursor:pointer}#integrationPanel summary{cursor:pointer;margin-top:6px}#integrationReadout{overflow-wrap:anywhere;background:#081018;padding:8px}#candidateModal{display:none;position:fixed;inset:0;background:#000b;z-index:60;place-items:center}#candidateModal>div{background:#14202e;color:#fff;width:min(640px,92vw);padding:24px;border-radius:14px}#candidateModal h2{margin:0 0 8px}#candidateLine{font-size:16px;line-height:1.6}#candidateModal button{margin:14px 8px 0 0;padding:8px 16px;background:#2a211c;color:#fff;border:1px solid #6b5a48;border-radius:8px;cursor:pointer}#candidateJSON,#playbackReadout{white-space:pre-wrap;font:11px monospace}</style></head>
-<body><section id="integrationPanel"><button id="integrationFold" type="button">夜间候选</button><div id="integrationBody" hidden><div id="integrationReadout"></div><button id="generateNight">生成这一夜</button><button id="localSave">保存</button><details><summary>实验</summary><label>实验日期 <input id="checkpointDay" type="number" value="3" min="1"></label><label>分钟 <input id="checkpointMinute" type="number" value="1380" min="0" max="1439"></label><button id="applyClock">设置实验时钟（未保存）</button><label><input id="forbidDetour" type="checkbox">禁止绕道（用于验证无合法结果）</label><button id="pendingOpen">重开待决候选</button><button id="recover">恢复读取</button><button id="repeatDecision">重送上一决策（幂等）</button><button id="exportEnvelope">下载 Envelope</button><button id="openArchive">打开最新 archive</button><button id="playbackstep">播放一步</button><button id="playbackskip">跳过</button><button id="playbackreplay">重放</button></details><div id="integrationStatus"></div><pre id="playbackReadout"></pre></div></section><div id="candidateModal"><div><h2>你不在的这一夜</h2><p id="candidateLine"></p><button id="candidateReject">划走，回到离开前</button><button id="candidateAccept">留下这一夜</button><button id="candidateClose">先不决定</button></div></div>
+<body><section id="integrationPanel" hidden><button id="integrationFold" type="button">夜间候选</button><div id="integrationBody" hidden><div id="integrationReadout"></div><button id="generateNight">生成这一夜</button><button id="cancelInterrupted">取消中断生成并恢复</button><details><summary>实验</summary><label>实验日期 <input id="checkpointDay" type="number" value="3" min="1"></label><label>分钟 <input id="checkpointMinute" type="number" value="1380" min="0" max="1439"></label><button id="applyClock">设置实验时钟（未保存）</button><label><input id="forbidDetour" type="checkbox">禁止绕道（用于验证无合法结果）</label><button id="pendingOpen">重开待决候选</button><button id="recover">恢复读取</button><button id="repeatDecision">重送上一决策（幂等）</button><button id="exportEnvelope">下载 Envelope</button><button id="openArchive">打开最新 archive</button><button id="playbackstep">播放一步</button><button id="playbackskip">跳过</button><button id="playbackreplay">重放</button></details><div id="integrationStatus"></div><pre id="playbackReadout"></pre></div></section><div id="candidateModal"><div><h2>你不在的这一夜</h2><p id="candidateLine"></p><button id="candidateReject">划走，回到离开前</button><button id="candidateAccept">留下这一夜</button><button id="candidateClose">先不决定</button></div></div>
 <select id="featuredRole" hidden></select>
 <div id="stage"></div>
+<div id="guide" role="dialog" aria-label="开局引导">
+  <h3>你是破坏神</h3>
+  <ol>
+    <li>你掌握破坏技能。百姓在城镇生活；守卫维持秩序，头上有「卫」标记。</li>
+    <li>武侠藏在人群中，会在镜头外拉拢百姓。百姓入盟后保留职业，武侠与守卫敌对，并在夜间分波反抗。</li>
+    <li>左键选择人物，按住拖动可扔出；落地只算倒地。Ctrl + 左键拖动旋转镜头，滚轮缩放。</li>
+    <li>反抗后，午夜仍有守卫站立是恶胜利；只用破坏杀光守卫、没有杀其他人是善胜利。守卫全部倒下则城镇被解放。</li>
+    <li>关闭说明后开始计时，默认现实 1 分钟过完一天；一局结束后世界会进入下一步演化。</li>
+  </ol>
+  <button type="button" id="guideOk">知道了，开始</button>
+</div>
 <button type="button" id="hudToggle" aria-label="展开控制面板">☰ 控制</button>
 <div id="labels"></div>
 <div id="inspect"></div>
@@ -74,38 +102,43 @@ button.wide{width:100%;margin-top:8px}
   <button type="button" id="licOk">领证开工</button>
 </div>
 <aside id="hud">
-  <h1>武侠世界 · 乐高沙盘</h1>
+  <h1>武侠小镇 · 破坏神</h1>
   <p class="sub">村 · 杏花村 / 城 · 洛阳城 / 塞 · 雁门关</p>
-  <button type="button" id="away" class="wide" style="margin-top:0">不在场 · 离开 8 小时</button>
-  <button type="button" id="topple" class="wide">推倒北墙</button>
-  <button type="button" id="god" class="wide">破坏神</button>
-  <button type="button" id="alliance" class="wide">结成武林盟</button>
-  <p id="allianceList" style="display:none"></p>
-  <div class="row"><span>时刻</span><output id="clock">10:00 巳时</output></div>
-  <input id="minute" type="range" min="0" max="1439" step="1" value="600" aria-label="模拟分钟">
+  <div hidden><button type="button" id="away" class="wide">不在场 · 离开 8 小时</button><button type="button" id="topple" class="wide">推倒北墙</button><button type="button" id="god" class="wide">破坏神</button></div>
+  <label for="disaster">破坏技能</label>
+  <select id="disaster"><option value="地震">地震</option><option value="陨石">陨石</option><option value="落雷">落雷</option><option value="雷火">雷火</option><option value="流星碎石">流星碎石</option><option value="火攻">火攻</option><option value="地裂">地裂</option><option value="市集起火">市集起火</option><option value="投石">投石</option><option value="挖墙">挖墙</option><option value="大火">大火</option><option value="灶火">灶火</option><option value="野火">野火</option><option value="火药">火药</option><option value="冰雹">冰雹</option><option value="龙卷风">龙卷风</option></select>
+  <button type="button" id="castDisaster">发动技能</button>
+  <p class="tip" id="castPreview" role="status" aria-live="polite"></p>
+  <p id="rebel" hidden></p>
+  <div hidden><button type="button" id="alliance" class="wide">结成武林盟</button><p id="allianceList"></p></div>
+  <p id="legend"><label class="chk"><input id="markGuards" type="checkbox" checked> 高亮守卫</label> <button type="button" id="guideAgain" style="padding:2px 8px;font-size:11px">操作说明</button></p>
+  <div class="row"><span>时刻</span><output id="clock">00:00 子时</output></div>
+  <input id="minute" type="range" min="0" max="1439" step="1" value="0" aria-label="模拟分钟">
+  <div class="row"><label for="dayDuration">一天实际时长（1×）</label><select id="dayDuration"><option value="60">1 分钟</option><option value="180">3 分钟</option><option value="900">15 分钟</option></select></div>
   <div class="row"><span>流速</span><span class="btns" id="speeds"><button type="button" data-speed="1" class="on">1×</button><button type="button" data-speed="2">2×</button><button type="button" data-speed="4">4×</button></span></div>
-  <div class="row"><label for="seed">世界编号</label><input id="seed" type="number" step="1" value="20260818"></div>
-  <div class="row btns"><button type="button" id="rebuild">重建世界</button><button type="button" id="reroll" title="只换种子，不读破坏记录">换个编号</button></div>
+  <div hidden><input id="seed" type="number" step="1" value="20260818"><button type="button" id="rebuild">重建世界</button><button type="button" id="reroll">换一个</button></div>
+  <p class="tip" id="director" role="status" aria-live="polite">一局结束后，本机导演会根据你的破坏记录演化世界。</p>
+  <button type="button" id="retryDirector" hidden>重试世界演化</button>
+  <button type="button" id="directorLocal" hidden>本地模拟，非后端生成 · 换下一城</button>
+  <details id="adaptDetails" open><summary>破坏画像与适应</summary><p class="tip" id="adaptRound">本局技能：无 · 胜负：未结算</p><p class="tip" id="adaptLast">上轮导演：暂无记录（一局结束后自动记录）</p></details>
+  <details><summary>存档</summary><p class="tip">保存到当前浏览器，或导出文件带到其他设备。</p><div class="btns"><button type="button" id="localSave">保存</button><button type="button" id="export">导出</button><button type="button" id="import">导入</button></div><input id="fileInput" type="file" accept=".json,application/json" hidden></details>
   <div class="row"><span>渲染档</span><span class="btns"><button type="button" id="modeClay">白模</button><button type="button" id="modeLego" class="on">乐高彩</button></span></div>
   <div class="row"><span>视角</span><span class="btns"><button type="button" data-zone="village">村</button><button type="button" data-zone="city">城</button><button type="button" data-zone="frontier">塞</button><button type="button" data-zone="all">全景</button><button type="button" id="fpToggle">第一人称</button></span></div>
-  <div class="row btns"><button type="button" id="buildToggle">营造模式 (B)</button><button type="button" id="undoBuild" style="display:none">撤销上一步</button></div>
-  <div class="row btns" id="palette" style="display:none"><button type="button" data-block="wood" class="on">木</button><button type="button" data-block="stone">石</button><button type="button" data-block="brick">砖</button><button type="button" data-block="tile">瓦</button><button type="button" id="removeMode">拆除</button></div>
-  <div class="row"><label for="patchCmd">AI 补丁（点名 ID）</label></div>
-  <input id="patchCmd" type="text" placeholder="把 c-pagoda 的 floors 改成 7" style="width:100%;padding:3px 6px;border:1px solid rgba(42,33,24,.2);border-radius:7px;font:inherit">
-  <div class="row btns"><button type="button" id="patchApply">应用补丁</button><button type="button" id="patchUndo">撤销补丁</button></div>
-  <div class="row btns"><button type="button" id="patchSelfCheck" class="wide">30 条指令集自检</button></div>
-  <p class="tip" id="patchStatus" style="margin-top:4px"></p>
-  <label class="chk"><input id="orbit" type="checkbox"> 自动环绕</label>
-  <label class="chk"><input id="lockTime" type="checkbox"> 锁定时间</label>
-  <label class="chk"><input id="sound" type="checkbox"> 语音（中英 · 本地预生成）</label>
-  <button type="button" id="replay" class="wide">重放落块动画</button>
-  <div class="row btns"><button type="button" id="export">导出快照</button><button type="button" id="import">导入快照</button></div>
-  <input id="fileInput" type="file" accept=".json,application/json">
+  <div id="legacyControls" hidden>
+    <div class="row btns"><button type="button" id="buildToggle">营造模式 (B)</button><button type="button" id="undoBuild" style="display:none">撤销上一步</button></div>
+    <div class="row btns" id="palette" style="display:none"><button type="button" data-block="wood" class="on">木</button><button type="button" data-block="stone">石</button><button type="button" data-block="brick">砖</button><button type="button" data-block="tile">瓦</button><button type="button" id="removeMode">拆除</button></div>
+    <label for="patchCmd">AI 补丁（点名 ID）</label><input id="patchCmd" type="text">
+    <button type="button" id="patchApply">应用补丁</button><button type="button" id="patchUndo">撤销补丁</button><button type="button" id="patchSelfCheck">30 条指令集自检</button><p id="patchStatus"></p>
+    <input id="orbit" type="checkbox"><button type="button" id="replay">重放落块动画</button>
+  </div>
+  <label class="chk"><input id="lockTime" type="checkbox"> 暂停时间</label>
+  <label class="chk"><input id="sound" type="checkbox"> 语音</label>
   <div id="bar"><i></i></div>
-  <p class="tip">拖拽旋转 · 滚轮缩放 · 同一编号必得同一座世界<br>营造模式：左键放方块 / 右键拆（仅建造层）/ 1–4 选材<br>1 模拟分钟 = 0.625 秒，1 天 = 900 秒 · 断网可运行<br>与守卫对峙，不动手：入伙的百姓只把目标指向守卫，不攻击、不放倒<br>4C：连接（种子世界）→ 建构（营造）→ 思考（inspect / 不在场）→ 继续（AI 补丁 / 快照）· 参考 LEGO® Education LearnToLearn</p>
+  <p class="tip">左键选择或拖动人物 · Ctrl + 左键旋转 · 滚轮缩放</p>
 </aside>
 <div id="fpHint">第一人称 · WASD 移动 · Shift 加速 · 拖拽转向 · F 退出</div>
-<div id="stamp">世界 <b id="stampSeed">20260818</b> · 结构 <b id="stampB">0</b> · 代理 <b id="stampA">0</b> · 方块 <b id="stampK">0</b> · 凸粒 <b id="stampS">0</b> · <b id="stampFps">0</b> fps · <b id="stampCalls">0</b> calls · <b id="stampTri">0</b> tri</div>
+<div id="stamp" hidden>世界 <b id="stampSeed">20260818</b> · 结构 <b id="stampB">0</b> · 代理 <b id="stampA">0</b> · 方块 <b id="stampK">0</b> · 凸粒 <b id="stampS">0</b> · <b id="stampFps">0</b> fps · <b id="stampCalls">0</b> calls · <b id="stampTri">0</b> tri</div>
+<div id="buildStamp" title="版本戳：规则版本 · 源码短哈希 · 构建时间（UTC）">v147-16skills-auto-rebel · <span id="buildStampMeta">源码直开（未打包）</span></div>
 <div id="fatal"><p>无法初始化 WebGL 场景，请用支持 WebGL2 的现代浏览器打开。</p></div>
 <script src="./vendor/three.min.js"></script>
 <script src="./vendor/gltf-loader.min.js"></script>
@@ -261,9 +294,57 @@ button.wide{width:100%;margin-top:8px}
   }
   const integer = n => Number.isSafeInteger(n) && n >= 0;
   const id = s => typeof s === 'string' && s.length > 0 && s.length <= 160 && !forbidden.has(s);
+  const REBELLION_GUARD_FRACTION = 0.25;
+  function combatCheck(combat, census, code = ERRORS.INVALID) {
+    shape(combat, ['agents', 'rebellionOccurred', 'verdictText', 'verdictDay', 'verdictClock', 'outsiderSent'], ['rebellionWaves', 'roundFinished'], code);
+    if (!Array.isArray(census) || !Array.isArray(combat.agents) || combat.agents.length !== census.length ||
+        typeof combat.rebellionOccurred !== 'boolean' || typeof combat.outsiderSent !== 'boolean' ||
+        typeof combat.verdictText !== 'string' || !integer(combat.verdictDay) ||
+        !Number.isFinite(combat.verdictClock) || combat.verdictClock < 0 ||
+        (own(combat, 'roundFinished') && typeof combat.roundFinished !== 'boolean')) fail(code, '非法战斗状态');
+    const roster = new Map();
+    for (const c of census) {
+      if (!c || !id(c.id) || typeof c.role !== 'string' || roster.has(c.id)) fail(code, '非法角色身份');
+      roster.set(c.id, c.role);
+    }
+    const seen = new Set();
+    for (const a of combat.agents) {
+      shape(a, ['id', 'role', 'faction', 'x', 'z', 'downed', 'dead', 'deathCause', 'downedBy', 'outsider', 'flying', 'vx', 'vz', 'flyT', 'y'], [], code);
+      if (!roster.has(a.id) || roster.get(a.id) !== a.role || seen.has(a.id) ||
+          !['folk', 'wuxia'].includes(a.faction) || !['x', 'z', 'vx', 'vz', 'flyT', 'y'].every(k => Number.isFinite(a[k])) ||
+          !['downed', 'dead', 'outsider', 'flying'].every(k => typeof a[k] === 'boolean') ||
+          typeof a.deathCause !== 'string' || typeof a.downedBy !== 'string' ||
+          (a.downedBy && !roster.has(a.downedBy)) ||
+          Math.abs(a.x) > 75 || Math.abs(a.z) > 75 || Math.abs(a.vx) > 8 || Math.abs(a.vz) > 8 ||
+          a.flyT < 0 || a.flyT > 2 || a.y < 0 || a.y > 20 ||
+          (a.dead && (!a.downed || a.flying || !a.deathCause)) ||
+          (!a.dead && !!a.deathCause) || (a.downed && a.flying)) fail(code, '非法角色战斗状态');
+      seen.add(a.id);
+    }
+    if (own(combat, 'rebellionWaves')) {
+      if (!Array.isArray(combat.rebellionWaves) || combat.rebellionWaves.length > 10000) fail(code, '非法反叛波次');
+      const waveIds = new Set(), cap = Math.floor(census.filter(c => c.role === 'guard').length * REBELLION_GUARD_FRACTION);
+      for (const wave of combat.rebellionWaves) {
+        shape(wave, ['wave', 'attackers'], [], code);
+        if (!integer(wave.wave) || waveIds.has(wave.wave) || !Array.isArray(wave.attackers) ||
+            wave.attackers.length > cap || new Set(wave.attackers).size !== wave.attackers.length ||
+            wave.attackers.some(a => !roster.has(a) || roster.get(a) === 'guard')) fail(code, '非法反叛波次');
+        waveIds.add(wave.wave);
+      }
+    }
+  }
+  function sceneCheck(scene, world, code = ERRORS.INVALID) {
+    shape(scene, ['toppled', 'threatLog'], [], code);
+    if (!world || !Array.isArray(world.plans) || !Array.isArray(scene.toppled) || !Array.isArray(scene.threatLog)) fail(code, '非法场景状态');
+    const planIds = world.plans.map(p => p && p.id), ids = new Set(planIds);
+    if (planIds.some(p => !id(p)) || ids.size !== planIds.length ||
+        scene.toppled.some(id => typeof id !== 'string' || !ids.has(id)) ||
+        new Set(scene.toppled).size !== scene.toppled.length || scene.threatLog.length > 10000 ||
+        scene.threatLog.some(t => typeof t !== 'string' || !t || t.length > 160)) fail(code, '非法建筑或导演记录');
+  }
   function stateCheck(s, code) {
     shape(s, ['currentSeed', 'world', 'census', 'builds', 'buildOps', 'buildSeq', 'planOverrides',
-      'roleTint', 'patchAudit', 'totalMin', 'day', 'simMinute'], ['scheduleOverrides'], code);
+      'roleTint', 'patchAudit', 'totalMin', 'day', 'simMinute'], ['scheduleOverrides', 'combat', 'scene'], code);
     if (!integer(s.currentSeed) || s.currentSeed > 0xffffffff || !integer(s.buildSeq) ||
         !Number.isFinite(s.totalMin) || s.totalMin < 0 ||
         s.day !== 1 + Math.floor(s.totalMin / 1440) || s.simMinute !== s.totalMin % 1440)
@@ -272,13 +353,16 @@ button.wide{width:100%;margin-top:8px}
       if (own(s, k) && (!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k]))) fail(code, k + ' 必须是对象');
     }
     for (const k of ['census', 'builds', 'buildOps', 'patchAudit']) if (!Array.isArray(s[k])) fail(code, k + ' 必须是数组');
+    if (own(s, 'combat')) combatCheck(s.combat, s.census, code);
+    if (own(s, 'scene')) sceneCheck(s.scene, s.world, code);
   }
   function activeAttempt(e) {
     return Object.values(e.receipts).find(r => r.type === 'begin' && r.attemptNo === e.attemptNo) || null;
   }
   function isPending(e) {
     const a = activeAttempt(e);
-    return !!a && !e.decisions.some(d => d.attemptId === a.attemptId);
+    return !!a && !e.decisions.some(d => d.attemptId === a.attemptId) &&
+      !Object.values(e.receipts).some(r => r.type === 'cancel' && r.attemptId === a.attemptId);
   }
   function validateEnvelope(input) {
     const code = ERRORS.INCOMPATIBLE, e = clone(input, code);
@@ -292,10 +376,10 @@ button.wide{width:100%;margin-top:8px}
     const attempts = new Set();
     for (const [key, r] of Object.entries(e.receipts)) {
       shape(r, ['commandId', 'type', 'revision', 'attemptId', 'attemptNo', 'baseRevision', 'candidateId', 'commandSignature'], [], code);
-      if (!id(key) || r.commandId !== key || !['begin', 'publish', 'accept', 'reject'].includes(r.type) ||
+      if (!id(key) || r.commandId !== key || !['begin', 'publish', 'accept', 'reject', 'cancel'].includes(r.type) ||
           !id(r.attemptId) || !integer(r.attemptNo) || r.attemptNo < 1 || r.attemptNo > e.attemptNo ||
           !integer(r.revision) || r.revision < 1 || r.revision > e.revision || !integer(r.baseRevision) ||
-          typeof r.commandSignature !== 'string' || (r.type === 'begin' ? r.candidateId !== null : !id(r.candidateId))) fail(code, '非法 receipt');
+          typeof r.commandSignature !== 'string' || (['begin', 'cancel'].includes(r.type) ? r.candidateId !== null : !id(r.candidateId))) fail(code, '非法 receipt');
       if (r.type === 'begin') {
         if (attempts.has(r.attemptNo) || r.attemptId !== 'attempt-' + r.attemptNo || r.baseRevision !== r.revision) fail(code, '非法 begin receipt');
         attempts.add(r.attemptNo);
@@ -307,6 +391,9 @@ button.wide{width:100%;margin-top:8px}
       if (!begin || r.attemptNo !== begin.attemptNo || r.baseRevision !== begin.baseRevision ||
           (r.type !== 'begin' && r.revision <= begin.revision)) fail(code, 'receipt 尝试身份不一致');
       if (['accept', 'reject'].includes(r.type) && !e.decisions.some(d => d.commandId === r.commandId)) fail(code, '缺少 receipt 对应决策');
+      if (r.type === 'cancel' && (e.decisions.some(d => d.attemptId === r.attemptId) ||
+          Object.values(e.receipts).some(p => p.type === 'publish' && p.attemptId === r.attemptId) ||
+          Object.values(e.receipts).filter(p => p.type === 'cancel' && p.attemptId === r.attemptId).length !== 1)) fail(code, '非法取消记录');
     }
     const decided = new Set();
     for (const d of e.decisions) {
@@ -343,7 +430,7 @@ button.wide{width:100%;margin-top:8px}
   function commandCheck(input) {
     const c = clone(input), common = ['type', 'commandId', 'expectedRevision'];
     const extra = { begin: [], publish: ['attemptId', 'candidateId', 'baseRevision', 'state', 'events', 'metadata'], checkpoint: ['state'],
-      accept: ['attemptId', 'candidateId'], reject: ['attemptId', 'candidateId'], close: [], dismiss: [] };
+      accept: ['attemptId', 'candidateId'], reject: ['attemptId', 'candidateId'], cancel: [], close: [], dismiss: [] };
     if (!c || !own(extra, c.type)) fail(ERRORS.INVALID, '未知 command.type');
     shape(c, common.concat(extra[c.type]), [], ERRORS.INVALID);
     if (!id(c.commandId) || !integer(c.expectedRevision)) fail(ERRORS.INVALID, '非法 commandId/revision');
@@ -374,9 +461,13 @@ button.wide{width:100%;margin-top:8px}
     const n = clone(e), revision = e.revision + 1;
     let attemptId, candidateId = null, baseRevision;
     if (c.type === 'begin') {
-      if (e.candidate) fail(ERRORS.BUSY, '候选待决定，禁止覆盖');
+      if (e.candidate || isPending(e)) fail(ERRORS.BUSY, '尝试待完成，禁止覆盖');
       if (e.attemptNo === Number.MAX_SAFE_INTEGER) fail(ERRORS.INCOMPATIBLE, 'attemptNo 溢出');
       n.attemptNo++; attemptId = 'attempt-' + n.attemptNo; baseRevision = revision;
+    } else if (c.type === 'cancel') {
+      const a = activeAttempt(e);
+      if (e.candidate || !a || !isPending(e) || e.revision !== a.baseRevision) fail(ERRORS.STALE, '没有可取消的中断生成');
+      attemptId = a.attemptId; baseRevision = a.baseRevision;
     } else if (c.type === 'publish') {
       const a = activeAttempt(e);
       if (e.candidate || !a || !isPending(e) || c.attemptId !== a.attemptId ||
@@ -407,7 +498,7 @@ button.wide{width:100%;margin-top:8px}
       candidate: null, attemptNo: 0, decisions: [], receipts: {}, archive: [], rejectedSignatures: [] });
   }
   return Object.freeze({ SCHEMA_VERSION, ERRORS, CandidateError, transition, validateEnvelope, createEnvelope,
-    clone, freeze, isPending });
+    clone, freeze, isPending, combatCheck, sceneCheck, REBELLION_GUARD_FRACTION });
 });
 
 </script>
@@ -445,6 +536,7 @@ button.wide{width:100%;margin-top:8px}
     async function dispatch(command) {
       if (committing) fail(ERRORS.BUSY, '提交进行中');
       if (operation === 'blocked') fail(ERRORS.PERSIST, '请先 recover 重读权威存档');
+      if (command.type === 'cancel' && operation === 'generating') fail(ERRORS.BUSY, '生成中不能取消');
       const { next, result } = transition(live, command);
       if (next === live) return result;
       committing = true; operation = 'committing';
@@ -664,6 +756,23 @@ function createNightEvents(ports) {
     return h;
   };
   const signature = event => digest(semanticData(event));
+  function validateOverrides(accepted, buildDay) {
+    check(object(accepted.scheduleOverrides), 'E_OVERRIDE', '覆盖表非法');
+    const roles = new Map(accepted.census.map(a => [a.id, a]));
+    const plans = effectivePlans(accepted);
+    for (const [dayKey, byRole] of Object.entries(accepted.scheduleOverrides)) {
+      check(/^[1-9]\d*$/.test(dayKey) && integer(Number(dayKey)) && object(byRole), 'E_OVERRIDE', '日期索引非法');
+      for (const [id, entries] of Object.entries(byRole)) {
+        check(roles.has(id) && object(entries), 'E_OVERRIDE', '覆盖角色非法');
+        for (const [k, o] of Object.entries(entries)) {
+          validateOverride(o, k);
+          const point = standPoint(accepted, plans, o.target.id);
+          check(point && point.x === o.x && point.z === o.z, 'E_OVERRIDE', '旧覆盖站位已不合法');
+        }
+        effectiveDay(roles.get(id), Number(dayKey), accepted, buildDay);
+      }
+    }
+  }
   function generateNight(input, accepted, buildDay) {
     try {
       jsonCheck(input); jsonCheck(accepted);
@@ -696,19 +805,7 @@ function createNightEvents(ports) {
         check(roles.get(id).role === 'wanderer', 'E_ROLE_UNSUPPORTED', '仅支持现存侠客');
       }
       const plans = effectivePlans(accepted);
-      // 历史覆盖全部校验，不静默吞掉过期、非法或冲突记录。
-      for (const [dayKey, byRole] of Object.entries(accepted.scheduleOverrides)) {
-        check(/^[1-9]\d*$/.test(dayKey) && integer(Number(dayKey)) && object(byRole), 'E_OVERRIDE', '日期索引非法');
-        for (const [id, entries] of Object.entries(byRole)) {
-          check(roles.has(id) && object(entries), 'E_OVERRIDE', '覆盖角色非法');
-          for (const [k, o] of Object.entries(entries)) {
-            validateOverride(o, k);
-            const point = standPoint(accepted, plans, o.target.id);
-            check(point && point.x === o.x && point.z === o.z, 'E_OVERRIDE', '旧覆盖站位已不合法');
-          }
-          effectiveDay(roles.get(id), Number(dayKey), accepted, buildDay);
-        }
-      }
+      validateOverrides(accepted, buildDay);
       const selected = (featured.length ? featured.map(id => roles.get(id)) : [...roles.values()].filter(a => a.role === 'wanderer')).sort((a,b) => cmp(a.id,b.id));
       const targets = ['c-academy', 'c-inn'].map(id => ({ id, point: standPoint(accepted, plans, id) })).filter(t => t.point);
       const normalized = { ...input, script: { preferredActions: preferred, forbiddenActions: forbidden, featuredRoleIds: featured }, rejectedSignatures: rejected, searchBudget: budget };
@@ -757,7 +854,7 @@ function createNightEvents(ports) {
       return { status: 'failed', code: e.code || 'E_GENERATOR', message: String(e.message) };
     }
   }
-  return { generateNight, effectiveDay, semanticSignature: signature, hashState: digest };
+  return { generateNight, effectiveDay, validateOverrides, semanticSignature: signature, hashState: digest };
 }
 function generateNight(input, accepted, buildDay, ports) {
   return createNightEvents(ports).generateNight(input, accepted, buildDay);
@@ -785,15 +882,18 @@ function createPlayback(events) {
 }
 module.exports = { createPlayback };
 ;return module.exports;})();</script>
+<!--BUILD-INJECT-->
 <script>
 (function () {
 'use strict';
 /*==PURE-START==*/
 /* ================= PURE §1 常量与时钟（纯函数，无 THREE / DOM） ================= */
-var MINUTES_PER_DAY = 1440, SECONDS_PER_SIM_MINUTE = 0.625;
+var MINUTES_PER_DAY = 1440, DEFAULT_REAL_DAY_SECONDS = 60;
 var DAY_START = 330, DAY_FULL = 420, DUSK_START = 1110, NIGHT_START = 1170;
 var SEED_MASTER = 0x9E3779B9, SEED_LAYOUT = 0x5B912ACE, SEED_ROSTER = 0x4C495547, SEED_PROPS = 2166136261;
 var CENSUS_N = 240, MAX_BUILDS = 512, WORLD_HALF = 70;
+// 渲染容量=基础 240 + 守卫增援余量（guard_reinforce 上限 150% → 最多 +20）；CENSUS_N 仍是基础口径。
+var CENSUS_CAP = 300;
 var BLOCK_COLORS = { wood: 0x795548, stone: 0x9e9e9e, brick: 0xc4281b, tile: 0x5a5a5a };
 function acceptBuildType(type) {
   return Object.prototype.hasOwnProperty.call(BLOCK_COLORS, type);
@@ -805,9 +905,18 @@ function acceptImportedBuild(b) {
   if (b.y < 0.5 || b.y > 7.5 || Math.abs(b.x) > WORLD_HALF - 2 || Math.abs(b.z) > WORLD_HALF - 2) return false;
   return true;
 }
-/* 1 米方块（中心 x,y,z）是否吃进某栋建筑。城门只算门墩和门梁，洞里不算。贴面不算吃进。 */
+/* 避难所三面实墙的几何（西 / 东 / 北各 0.6 米厚，南面开口可进出），与 planParts 的渲染一致。
+   blockHitsPlan 与 solidAt 共用这一份口径：只算墙、不算内部空腔；免疫区仍是内部（见 affectNear）。 */
+function shelterWalls(p) {
+  return [
+    { x: p.x - p.w / 2 + 0.3, z: p.z, w: 0.6, d: p.d },
+    { x: p.x + p.w / 2 - 0.3, z: p.z, w: 0.6, d: p.d },
+    { x: p.x, z: p.z - p.d / 2 + 0.3, w: p.w, d: 0.6 }
+  ];
+}
+/* 1 米方块（中心 x,y,z）是否吃进某栋建筑。城门只算门墩和门梁，洞里不算；避难所只算三面墙。贴面不算吃进。 */
 function blockHitsPlan(world, x, y, z) {
-  var i, p, g, id;
+  var i, p, g, id, walls, wi;
   function hit(name, ax, az, aw, ad, by0, by1) {
     if (x + 0.5 > ax - aw / 2 + 1e-4 && ax + aw / 2 > x - 0.5 + 1e-4 &&
         z + 0.5 > az - ad / 2 + 1e-4 && az + ad / 2 > z - 0.5 + 1e-4 &&
@@ -825,6 +934,12 @@ function blockHitsPlan(world, x, y, z) {
       if (id) return id;
       id = hit(p.id, p.x, p.z, g.opening, p.d, g.passageH, p.h);
       if (id) return id;
+    } else if (p.kind === 'shelter') {
+      walls = shelterWalls(p);
+      for (wi = 0; wi < walls.length; wi++) {
+        id = hit(p.id, walls[wi].x, walls[wi].z, walls[wi].w, walls[wi].d, 0, p.h);
+        if (id) return id;
+      }
     } else {
       id = hit(p.id, p.x, p.z, p.w, p.d, 0, p.h);
       if (id) return id;
@@ -847,7 +962,30 @@ function standClear(world, x, z) {
   }
   return { x: x, z: z };
 }
-/* 人占的 1 米见方。城门只算两座门墩，门洞和门梁都不算。和 blockHitsPlan 在 y=0.5 的判断同一套边界。 */
+/* 避难所只有南口能进出：通用绕墙在凹形三墙交角上会来回，这里像城门一样给显式引导点。
+   只在避难所附近（±10m）接管，远处仍走通用寻路/城门引导，避免引导线横穿城区：
+   南侧→横移到南口正中再直入；西/东侧→沿当前 x 纵移到南口外；北侧→先横移出墙区再南下；
+   内部的人要去外面→先出南口。每一段直线都不经过墙体，且只由当前位置决定，不会来回。 */
+function shelterRoute(world, x, z, tx, tz) {
+  var i, p, clearX, northZ, southZ, inside, tIn;
+  for (i = 0; i < world.plans.length; i++) {
+    p = world.plans[i];
+    if (p.kind !== 'shelter') continue;
+    clearX = p.w / 2 - 1.1; northZ = p.z - p.d / 2 + 1.1; southZ = p.z + p.d / 2;
+    inside = Math.abs(x - p.x) < clearX && z > northZ && z < southZ;
+    tIn = Math.abs(tx - p.x) < clearX && tz > northZ && tz < southZ;
+    if (inside) return tIn ? null : { x: p.x, z: southZ + 1.2 };
+    if (!tIn) return null;
+    if (Math.abs(x - p.x) > p.w / 2 + 10 || Math.abs(z - p.z) > p.d / 2 + 10) return null;
+    if (Math.abs(x - p.x) < clearX && z > southZ) return null;
+    if (z > southZ + 0.6) return { x: p.x, z: z };
+    if (x < p.x - p.w / 2 - 0.6 || x > p.x + p.w / 2 + 0.6) return { x: x, z: southZ + 1.2 };
+    return { x: p.x + (x <= p.x ? -(p.w / 2 + 1.2) : p.w / 2 + 1.2), z: z };
+  }
+  return null;
+}
+/* 人占的 1 米见方。城门只算两座门墩，门洞和门梁都不算；避难所只算西/东/北三面墙，南口和内部可走。
+   和 blockHitsPlan 在 y=0.5 的判断同一套边界。 */
 function agentAabb(id, cx, cz, w, d) {
   return { id: id, x0: cx - w / 2 - 0.5, x1: cx + w / 2 + 0.5, z0: cz - d / 2 - 0.5, z1: cz + d / 2 + 0.5 };
 }
@@ -855,7 +993,7 @@ function inAabb(b, x, z) {
   return x > b.x0 + 1e-4 && b.x1 - 1e-4 > x && z > b.z0 + 1e-4 && b.z1 - 1e-4 > z;
 }
 function solidAt(world, x, z) {
-  var i, p, g, b;
+  var i, p, g, b, walls, wi;
   for (i = 0; i < world.plans.length; i++) {
     p = world.plans[i];
     if (p.h < 0.5) continue;
@@ -865,6 +1003,13 @@ function solidAt(world, x, z) {
       if (inAabb(b, x, z)) return b;
       b = agentAabb(p.id, p.x + g.opening / 2 + g.pierW / 2, p.z, g.pierW, p.d);
       if (inAabb(b, x, z)) return b;
+    } else if (p.kind === 'shelter') {
+      /* 与 gate 同模式：三面实墙算实体，南面开口与内部空腔可进出、可站人。 */
+      walls = shelterWalls(p);
+      for (wi = 0; wi < walls.length; wi++) {
+        b = agentAabb(p.id, walls[wi].x, walls[wi].z, walls[wi].w, walls[wi].d);
+        if (inAabb(b, x, z)) return b;
+      }
     } else {
       b = agentAabb(p.id, p.x, p.z, p.w, p.d);
       if (inAabb(b, x, z)) return b;
@@ -1050,7 +1195,10 @@ function doorStep(world, hit, x, z, tx, tz, step, destId) {
 function moveStep(world, x, z, tx, tz, step) {
   function insideCity(px, pz) { return Math.abs(px) < 20.6 && Math.abs(pz) < 20.6; }
   var realTx = tx, realTz = tz;
-  if (insideCity(x, z) !== insideCity(tx, tz)) {
+  /* 避难所在城外：人还在城内时先走城门引导出城，城外才用南口引导；内部的人先出南口再进城。 */
+  var shDoor = insideCity(x, z) ? null : shelterRoute(world, x, z, tx, tz);
+  if (shDoor) { tx = shDoor.x; tz = shDoor.z; }
+  else if (insideCity(x, z) !== insideCity(tx, tz)) {
     var gates = [[0, 22], [22, -9]], bestG = gates[0], bestD = 1e9, gi, g, gd, south, outWp, inWp, mouth, goingIn, wp;
     for (gi = 0; gi < gates.length; gi++) {
       g = gates[gi];
@@ -1195,9 +1343,51 @@ function easeDrop(p) {
 /* 城内民居锚点。种子只在锚点上 ±0.5，宽最多 5.6、深最多 4.8。巡逻按这个最坏包络让开。
    书院南侧那一栋原在 (8,-4)，和书院贴在一起，东南来的人又会卡在它南墙。改到 (5,-2)。 */
 var CITY_HOUSE = [[-16,-6],[-16,-14],[16,-6],[16,-14],[-8,-4],[5,-2],[-18,16],[18,17]];
+/* ================= issue147-adapt 导演契约 v2（PURE） =================
+ * threat 串是 modifiers 的单一真相源（D12）：director-v2:<focus>:<sorted,mods>，
+ * 不另设 snapshot/world 独立字段；layoutHash 已覆盖 threat 串，往返重算即校验。
+ * v1 串（director-v1:<focus>）行为字节级冻结（D14）；parseDirectorThreat 是
+ * 4 处耦合点（buildWorld 解析 / 开局 dx / 免疫串比 / 生成处）的统一入口（D2）。 */
+var DIRECTOR_MODIFIERS = ['civilian_shelter_routine', 'guard_reinforce', 'market_move', 'patrol_dense', 'wall_reinforce'];
+var GUARD_REINFORCE_N = 10;   // D5 固定常量：census 守卫 40+10=50 ≤ 初始 150%（60）；波次分母=census 含增援（D1）
+var SHELTER_ROUTINE_N = 8;    // D4：farmer/merchant 各前 8 共 16 人 ≤ 避难所约 50 格；溢出睡眠=在楼里（visible=false）
+function parseDirectorThreat(threat) {
+  if (typeof threat !== 'string') return null;
+  if (threat.indexOf('director-v1:') === 0) return { version: 1, focus: threat.slice(12), modifiers: [] };
+  if (threat.indexOf('director-v2:') !== 0) return null;
+  var parts = threat.slice(12).split(':');
+  if (parts.length !== 2 || parts[0].length > 16) return null;
+  var mods = parts[1] === '' ? [] : parts[1].split(',');
+  if (mods.length > DIRECTOR_MODIFIERS.length) return null;
+  for (var i = 0; i < mods.length; i++) {
+    if (DIRECTOR_MODIFIERS.indexOf(mods[i]) === -1) return null;
+    if (i > 0 && mods[i - 1] >= mods[i]) return null; // 白名单本身按字母序；严格升序=已排序+无重复（D6）
+  }
+  return { version: 2, focus: parts[0], modifiers: mods };
+}
+function directorFocusOf(threat) { var d = parseDirectorThreat(threat); return d ? d.focus : ''; }
+function threatModifiers(threat) { var d = parseDirectorThreat(threat); return d ? d.modifiers : []; }
+function worldModifiers(world) { return threatModifiers(world && world.layoutThreat); }
+function hasModifier(world, mod) { return worldModifiers(world).indexOf(mod) !== -1; }
+function directorThreatString(focus, mods) { return 'director-v2:' + focus + ':' + mods.slice().sort().join(','); }
+/* patrol_dense（D5）：PATROL 确定性插值加密（相邻点中点），只改遭遇几何；
+   「近身窗口变短」是涌现结果，不作受控效果宣称（D10）。 */
+function densePatrol() {
+  var out = [], i, a, b;
+  for (i = 0; i < PATROL.length; i++) {
+    a = PATROL[i]; b = PATROL[(i + 1) % PATROL.length];
+    out.push(a); out.push([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
+  }
+  return out;
+}
+function patrolFor(world) { return hasModifier(world, 'patrol_dense') ? densePatrol() : PATROL; }
 /* ================= PURE §2 世界生成（图纸 plans / 道具 props / 道路 roads） ================= */
 function buildWorld(seed, threat) {
-  // threat 是导演给的破坏种类。不传时布局与原来逐座一致，下面的分支都不进入。
+  // 版本前缀只影响新导演世界，旧存档仍按原规则生成。v1 分支字节级冻结（D14）。
+  var parsed = parseDirectorThreat(threat);
+  var directorThreat = parsed ? parsed.focus : '';
+  var mods = parsed && parsed.version === 2 ? parsed.modifiers : [];
+  var effectiveThreat = directorThreat || threat;
   var rndL = mulberry32((seed ^ SEED_LAYOUT) >>> 0);
   var rndM = mulberry32((seed ^ SEED_MASTER) >>> 0);
   var rndP = mulberry32((seed ^ SEED_PROPS) >>> 0);
@@ -1222,11 +1412,17 @@ function buildWorld(seed, threat) {
   var vf = [[-42,41],[-33,41],[-42,47],[-33,47]];
   for (i = 0; i < vf.length; i++) plan('v-field-0' + (i + 1), 'village', 'field', vf[i][0], vf[i][1], 8, 5, 0.16, 1);
   /* 城：城墙（南 / 东留门）+ 角楼 + 城门 + 宝塔 + 功能建筑 + 民居 8 + 市集摊 6 */
-  var CH = 22, WT = 1.6, WH = 5;
+  var CH = 22, WT = 1.6;
+  // wall_reinforce（D3 几何版）：种子派生二选一——0=加高（5→6.5），1=加段（南墙外侧一段）；
+  // 投石/挖墙 kills:'none' 行为不变；HP/命中计数阈值版另立切片。s3 不在 legacy WALLS 六段清单内。
+  var wallMode = hash32(seed + ':wall-reinforce') % 2;
+  var wallRe = mods.indexOf('wall_reinforce') !== -1;
+  var WH = wallRe && wallMode === 0 ? 6.5 : 5;
   plan('c-wall-n', 'city', 'wall', 0, -CH, CH * 2 + WT, WT, WH, 1);
   plan('c-wall-w', 'city', 'wall', -CH, 0, WT, CH * 2 + WT, WH, 1);
   plan('c-wall-s1', 'city', 'wall', -12.5, CH, 19, WT, WH, 1);
   plan('c-wall-s2', 'city', 'wall', 12.5, CH, 19, WT, WH, 1);
+  if (wallRe && wallMode === 1) plan('c-wall-s3', 'city', 'wall', -12.5, CH + 2, 19, WT, WH, 1);
   plan('c-wall-e1', 'city', 'wall', CH, 7.5, WT, 29, WH, 1);
   plan('c-wall-e2', 'city', 'wall', CH, -17, WT, 12, WH, 1);
   var ct = [[-CH,-CH],[CH,-CH],[-CH,CH],[CH,CH]];
@@ -1234,7 +1430,7 @@ function buildWorld(seed, threat) {
   plan('c-gate', 'city', 'gate', 0, CH, 8, 4.4, 7.2, 1);
   /* 宝塔原在 z=-14，正压在东西向的民居线上，往西走的人停在塔的东南角。南移到 -10，那条线从塔南边过去。 */
   // 陨石砸高处。记住陨石的城不再起宝塔，改成一座低房，让人能躲在矮房子里。
-  if (threat === '\u9668\u77f3') plan('c-pagoda', 'city', 'house', 0, -10, 6, 6, 3, 1);
+  if (effectiveThreat === '\u9668\u77f3') plan('c-pagoda', 'city', 'house', 0, -10, 6, 6, 3, 1);
   else plan('c-pagoda', 'city', 'pagoda', 0, -10, 6, 6, 15, 5);
   plan('c-academy', 'city', 'academy', 8, -9, 5.4, 4.2, 3.4, 1);
   plan('c-inn', 'city', 'inn', -10, 14, 7, 5, 4.2, 2);
@@ -1242,14 +1438,27 @@ function buildWorld(seed, threat) {
   for (i = 0; i < CITY_HOUSE.length; i++) {
     var hx = CITY_HOUSE[i][0], hz = CITY_HOUSE[i][1];
     // 洪水漫低处，住宅挪到靠城墙的一圈。大火往外烧，房子彼此推开，留出烧不过去的缝。
-    if (threat === '\u9668\u77f3') { hx *= 0.5; hz *= 0.5; }
-    if (threat === '\u6d2a\u6c34') { var ang = i / CITY_HOUSE.length * 6.2832; hx = Math.cos(ang) * 18; hz = Math.sin(ang) * 18; }
-    if (threat === '\u5927\u706b') { hx *= 1.6; hz *= 1.6; }
+    if (effectiveThreat === '\u9668\u77f3') { hx *= 0.5; hz *= 0.5; }
+    if (effectiveThreat === '\u6d2a\u6c34') { var ang = i / CITY_HOUSE.length * 6.2832; hx = Math.cos(ang) * 18; hz = Math.sin(ang) * 18; }
+    if (effectiveThreat === '\u5927\u706b') { hx *= 1.6; hz *= 1.6; }
     plan('c-house-0' + (i + 1), 'city', 'house', hx + (rndL() - 0.5), hz + (rndL() - 0.5),
       4 + rndL() * 1.6, 3.6 + rndL() * 1.2, 2.8 + rndL() * 1.4, rndL() < 0.3 ? 2 : 1);
   }
   var sx = [-16, -11, -6, 6, 11, 16];
-  for (i = 0; i < sx.length; i++) plan('c-stall-0' + (i + 1), 'city', 'stall', sx[i], 4, 2.6, 2, 2.3, 1);
+  // market_move（D5/D7）：种子派生位移，只影响 stall 类目标（市集起火/冰雹）；火攻仍打 c-gate。
+  // dz∈0..2 → z 4..6，与巡逻线 z=8 保持 ≥1.8m；dx∈-2..2 与巡逻点 x=±20.25 保持 ≥2.1m。
+  var mdx = 0, mdz = 0;
+  if (mods.indexOf('market_move') !== -1) {
+    mdx = (hash32(seed + ':market-dx') % 5) - 2;
+    mdz = hash32(seed + ':market-dz') % 3;
+    // solidAt 不重叠校验（D5）：任一样本点撞上既有实体则确定性回退原位。
+    var tent = { plans: plans }, mok = true, mi, mj;
+    for (mi = 0; mi < sx.length && mok; mi++)
+      for (mj = -1; mj <= 1 && mok; mj++)
+        if (solidAt(tent, sx[mi] + mdx + mj * 1.3, 4 + mdz)) mok = false;
+    if (!mok) { mdx = 0; mdz = 0; }
+  }
+  for (i = 0; i < sx.length; i++) plan('c-stall-0' + (i + 1), 'city', 'stall', sx[i] + mdx, 4 + mdz, 2.6, 2, 2.3, 1);
   /* 塞：烽火台 + 哨塔 2 + 长城段 + 营帐 4 + 栅栏 2 + 篝火 */
   plan('f-beacon', 'frontier', 'beacon', 38, -32, 5, 5, 9, 1);
   plan('f-tower-01', 'frontier', 'tower', 30, -24, 3.6, 3.6, 6, 1);
@@ -1263,6 +1472,9 @@ function buildWorld(seed, threat) {
   plan('f-palisade-01', 'frontier', 'palisade', 30.35, -18, 4.7, 0.6, 2.2, 1);
   plan('f-palisade-02', 'frontier', 'palisade', 44.5, -18, 7, 0.6, 2.2, 1);
   plan('f-fire', 'frontier', 'fire', 38, -27, 0.9, 0.9, 0.4, 1);
+  // 避难所存在条件（D11）：directorThreat 非空 OR mods 含 civilian_shelter_routine。
+  var shelterHere = !!directorThreat || mods.indexOf('civilian_shelter_routine') !== -1;
+  if (shelterHere) plan('v-shelter', 'village', 'shelter', -30, -5, 8, 8, 2.8, 1);
   /* 道路：村→城门，城东→塞 */
   roads.push({ id: 'road-vc1', x: -18, z: 28, w: 38, d: 3 });
   roads.push({ id: 'road-vc2', x: 0, z: 25, w: 3, d: 8 });
@@ -1277,6 +1489,7 @@ function buildWorld(seed, threat) {
     return false;
   }
   function blocked(x, z) {
+    if (shelterHere && Math.hypot(x + 30, z + 5) < 7) return true;
     if (Math.abs(x) < 25 && Math.abs(z) < 25) return true;
     if (Math.hypot(x + 36, z - 28) < 15) return true;
     if (Math.hypot(x - 38, z + 30) < 15) return true;
@@ -1319,16 +1532,24 @@ function legoPlanColor(id, key, kind) {
   return LEGO_PALETTE.white;
 }
 /* ================= PURE §3 花名册 census ================= */
-function makeCensus(seed, world) {
+function makeCensus(seed, world, threat) {
   var rnd = mulberry32((seed ^ SEED_ROSTER) >>> 0);
+  // modifiers 单一真相源=threat 串（D12）：显式 threat 优先，否则读 world.layoutThreat。
+  var mods = threatModifiers(threat !== undefined ? threat : (world ? world.layoutThreat : ''));
   var census = [], idx = 0, ri, i;
   var vHouses = world.plans.filter(function (p) { return p.kind === 'house' && p.zone === 'village'; });
   var cHouses = world.plans.filter(function (p) { return p.kind === 'house' && p.zone === 'city'; });
   var fields = world.plans.filter(function (p) { return p.kind === 'field'; });
   var stalls = world.plans.filter(function (p) { return p.kind === 'stall'; });
+  var hasShelter = world.plans.some(function (p) { return p.id === 'v-shelter'; });
+  // civilian_shelter_routine（D4）：集合子集=farmer 前 8 + merchant 前 8 共 16 人；其余百姓保持原作息。
+  var shelterN = mods.indexOf('civilian_shelter_routine') !== -1 ? SHELTER_ROUTINE_N : 4;
   for (ri = 0; ri < ROLES.length; ri++) {
     var R = ROLES[ri];
-    for (i = 0; i < R.n; i++) {
+    // guard_reinforce（D1/D5）：尾部追加固定 N=10，基础 id 稳定；census 守卫 50≤60（初始 150%）。
+    // 波次上限分母=census 守卫总数（含增援、含死亡=本局开局数），tryRebelAttack 公式不动，不得钉死 40。
+    var rn = R.n + (R.role === 'guard' && mods.indexOf('guard_reinforce') !== -1 ? GUARD_REINFORCE_N : 0);
+    for (i = 0; i < rn; i++) {
       idx++;
       var id = 'role-' + (idx < 10 ? '00' : (idx < 100 ? '0' : '')) + idx;
       var home, work;
@@ -1340,6 +1561,7 @@ function makeCensus(seed, world) {
       else if (R.role === 'blacksmith') { home = cHouses[(i + 5) % cHouses.length].id; work = 'c-forge'; }
       else if (R.role === 'innkeeper') { home = 'c-inn'; work = 'c-inn'; }
       else { home = 'c-inn'; work = 'roam'; }
+      if (hasShelter && ((R.role === 'farmer' && i < shelterN) || (R.role === 'merchant' && i < shelterN))) home = 'v-shelter';
       census.push({
         id: id, name: SURNAMES[Math.floor(rnd() * SURNAMES.length)] + GIVEN[Math.floor(rnd() * GIVEN.length)],
         gender: rnd() < 0.5 ? 'male' : 'female', age: 16 + Math.floor(rnd() * 54),
@@ -1394,9 +1616,9 @@ function patrolHit(world) {
     }
     return '';
   }
-  var a, c, h;
-  for (i = 0; i < PATROL.length; i++) {
-    a = PATROL[i]; c = PATROL[(i + 1) % PATROL.length];
+  var a, c, h, patrol = patrolFor(world);
+  for (i = 0; i < patrol.length; i++) {
+    a = patrol[i]; c = patrol[(i + 1) % patrol.length];
     h = blocked(a[0], a[1]);
     if (h) return 'point ' + a.join(',') + ' ' + h;
     h = segment(a, c);
@@ -1417,10 +1639,11 @@ function buildDay(agent, day, seed, world) {
   var i;
   if (agent.role === 'guard') {
     var ws = (480 + agent.shift * 480) % 1440;
-    var order = Math.floor(r() * PATROL.length);
+    var patrol = patrolFor(world); // patrol_dense：确定性插值加密（D5）；v1/无 mods 时即原 PATROL
+    var order = Math.floor(r() * patrol.length);
     for (i = 0; i < 4; i++) {
       var s0 = (ws + i * 120) % 1440, s1 = (ws + (i + 1) * 120) % 1440;
-      var wp = PATROL[(order + i) % PATROL.length];
+      var wp = patrol[(order + i) % patrol.length];
       if (s1 > s0) add(s0, s1, 'patrol', { x: wp[0], z: wp[1] });
       else { add(s0, 1440, 'patrol', { x: wp[0], z: wp[1] }); add(0, s1, 'patrol', { x: wp[0], z: wp[1] }); }
     }
@@ -1792,23 +2015,55 @@ var $ = function (id) { return document.getElementById(id); };
 var LOCAL_SAVE_KEY = 'wuxia-night-candidate-v1';
 var scheduleOverrides = {};
 var integrationBusy = true;
+function captureCombat() {
+  return { agents: agents.map(function(a) { return { id:a.id, role:a.role, faction:a.faction, x:a.x, z:a.z,
+    downed:!!a.downed, dead:!!a.dead, deathCause:a.deathCause||'', downedBy:a.downedBy||'',
+    outsider:!!a.outsider, flying:!!a.flying, vx:a.vx||0, vz:a.vz||0, flyT:a.flyT||0, y:a.y||0 }; }),
+    rebellionOccurred:rebellionOccurred, verdictText:verdictText, verdictDay:verdictDay,
+    verdictClock:verdictClock, outsiderSent:outsiderSent, roundFinished:roundFinished,
+    rebellionWaves:Object.keys(rebellionWaves).map(function(k) { return { wave:Number(k), attackers:rebellionWaves[k].slice() }; }) };
+}
+function applyCombat(combat) {
+  if (!combat) return;
+  CandidateCore.combatCheck(combat, census);
+  var byId = new Map(combat.agents.map(a => [a.id, a]));
+  agents.forEach(function(a) { Object.assign(a, byId.get(a.id)); });
+  rebellionOccurred=combat.rebellionOccurred; verdictText=combat.verdictText;
+  verdictDay=combat.verdictDay; verdictClock=combat.verdictClock; outsiderSent=combat.outsiderSent; roundFinished=!!combat.roundFinished;
+  rebellionWaves={}; (combat.rebellionWaves || []).forEach(function(w) { rebellionWaves[w.wave] = w.attackers.slice(); });
+  renderVerdict();
+}
 function captureAccepted() {
   return { currentSeed: currentSeed, world: world, census: census, builds: builds, buildOps: buildOps,
     buildSeq: buildSeq, planOverrides: planOverrides, roleTint: roleTint, patchAudit: patchAudit,
-    totalMin: totalMin, day: day, simMinute: simMinute, scheduleOverrides: scheduleOverrides };
+    totalMin: totalMin, day: day, simMinute: simMinute, scheduleOverrides: scheduleOverrides, combat: captureCombat(), scene: captureScene() };
+}
+function captureScene() { return { toppled:Object.keys(toppled).sort(), threatLog:threatLog.slice() }; }
+function applyScene(s) {
+  toppled = {}; (s ? s.toppled : []).forEach(id => { toppled[id] = 1; });
+  threatLog = s ? s.threatLog.slice() : [];
+  $('topple').textContent = toppled['c-wall-n'] ? '扶起北墙' : '推倒北墙';
+  $('god').textContent = ['c-wall-n','c-wall-w','c-wall-s1','c-wall-s2','c-wall-e1','c-wall-e2'].every(id => toppled[id]) ? '收回破坏' : '破坏神';
+  window.__toppled = Object.keys(toppled).length;
+  buildParts(); markAssetParts(); applyFalls();
 }
 function restoreAccepted(s) {
-  var snap = { version: 1, seed: s.currentSeed, day: s.day, minute: s.simMinute, plans: s.world.plans,
-    builds: s.builds, buildOps: s.buildOps, planOverrides: s.planOverrides, roleTint: s.roleTint, patchAudit: s.patchAudit };
-  importSnapshot(new Blob([JSON.stringify(snap)], { type: 'application/json' }));
-  totalMin = s.totalMin; simMinute = s.simMinute; scheduleOverrides = s.scheduleOverrides || {};
+  if (s.combat) CandidateCore.combatCheck(s.combat, s.census);
+  if (s.scene) CandidateCore.sceneCheck(s.scene, s.world);
+  rebuildInternal(s.currentSeed, undefined, s.world, s.census);
+  builds = CandidateCore.clone(s.builds); buildOps = CandidateCore.clone(s.buildOps); buildSeq = s.buildSeq;
+  planOverrides = CandidateCore.clone(s.planOverrides); roleTint = CandidateCore.clone(s.roleTint);
+  patchAudit = CandidateCore.clone(s.patchAudit); window.__wuxiaRoleTint = roleTint;
+  totalMin = s.totalMin; day = s.day; simMinute = s.simMinute;
+  scheduleOverrides = CandidateCore.clone(s.scheduleOverrides || {});
+  applyCombat(s.combat); applyScene(s.scene); repatch(); rebuildBlocks();
 }
 function worldEditBlocked() { return integrationBusy || (typeof controller !== 'undefined' && controller && controller.getOperation() !== 'idle'); }
 var controller=null, integrationBusy=true, worldRevision=0, playback=null, lastDecision=null;
 var captureLocalWorld = function(){ return captureAccepted(); };
 var hydrateLocalWorld = function(s){ restoreAccepted(s); };
 var night=NightEvents.createNightEvents({canonical:NightEvents.canonical,hash:IntegrationSHA});
-function editGuard(){if(worldEditBlocked()){notice('候选待决或保存进行中，世界已锁定');return false;}try{controller.guardWorldEdit();return true;}catch(e){notice(e.code+' '+e.message);return false;}}
+function editGuard(allowFinished){if(worldEditBlocked()){notice('候选待决或保存进行中，世界已锁定');return false;}if(roundFinished&&!allowFinished){notice('本局已结束，请重建或换城开始新的一局');return false;}try{controller.guardWorldEdit();return true;}catch(e){notice(e.code+' '+e.message);return false;}}
 function notice(text){$('integrationStatus').textContent=text;}
 function blockedWorld(){return worldEditBlocked();}
 function snapshotAccepted(){return controller.readAccepted();}
@@ -1816,9 +2071,10 @@ function downloadJSON(v,name){var a=document.createElement('a');a.href=URL.creat
 function syncUI(){
  if(!controller)return;
  var e=controller.getEnvelope(), busy=blockedWorld();
- ['localSave','rebuild','reroll','import','fileInput','patchApply','patchUndo','patchCmd','buildToggle','undoBuild','removeMode','minute','lockTime','god','topple','alliance','checkpointDay','checkpointMinute','applyClock'].forEach(id=>{if($(id))$(id).disabled=busy;});
- $('generateNight').disabled=integrationBusy||!!e.candidate||controller.getOperation()==='blocked';
+ ['localSave','rebuild','reroll','import','fileInput','patchApply','patchUndo','patchCmd','buildToggle','undoBuild','removeMode','minute','lockTime','dayDuration','god','disaster','castDisaster','topple','alliance','checkpointDay','checkpointMinute','applyClock'].forEach(id=>{if($(id))$(id).disabled=busy;});
+ $('generateNight').disabled=integrationBusy||controller.getOperation()!=='idle';
  $('pendingOpen').disabled=!e.candidate;
+ $('cancelInterrupted').disabled=integrationBusy||controller.getOperation()!=='interrupted'||!!e.candidate;
  $('integrationReadout').textContent='seed '+e.accepted.currentSeed+' | time '+e.accepted.totalMin+' (day '+e.accepted.day+') | audit '+e.accepted.patchAudit.length+' | revision '+e.revision+' | pending '+(e.candidate?e.candidate.candidateId:'none')+' | '+controller.getOperation();
  if(controller.isVisible()&&e.candidate){$('candidateModal').style.display='grid';$('candidateLine').textContent=candidateSentence(e);}else $('candidateModal').style.display='none';
 }
@@ -1826,31 +2082,57 @@ async function guardedTask(fn){integrationBusy=true;syncUI();try{await fn();}cat
 async function initIntegration(seed){
  try{
   var backing=WuxiaLocalStore.create(localStorage,LOCAL_SAVE_KEY), loaded=backing.load();
-  if(loaded)hydrateLocalWorld(loaded.accepted);else rebuild(seed);
-  scheduleOverrides=loaded?loaded.accepted.scheduleOverrides:{};
+  function validateIntegration(next){CandidateCore.validateEnvelope(next);validateGeneratedState(next.accepted);if(!next.integration||next.integration.version!==1||!/^[0-9a-f]{32}$/.test(next.integration.nightSalt)||!next.accepted.scheduleOverrides)throw Error('integration version/overrides missing');if(next.candidate){var c=next.candidate,m=c.metadata;validateGeneratedState(c.state);if(!m)throw Error('candidate metadata mismatch');
+if(m.semanticSignature!==night.semanticSignature(c.events[0])||m.eventHash!==IntegrationSHA(NightEvents.canonical(c.events))||m.resultHash!==night.hashState(c.state)||m.controllerAttemptId!==c.attemptId||c.candidateId!=='candidate:'+m.inputId)throw Error('candidate metadata mismatch');}return next;}
+  if(loaded){validateIntegration(loaded);hydrateLocalWorld(loaded.accepted);}else rebuild(seed);
   var initial=CandidateCore.clone(CandidateCore.createEnvelope(captureLocalWorld()));
   initial.integration={version:1,nightSalt:'0123456789abcdef0123456789abcdef',worldId:'offline-world-'+currentSeed};
-  function validateIntegration(next){CandidateCore.validateEnvelope(next);if(!next.integration||next.integration.version!==1||!/^[0-9a-f]{32}$/.test(next.integration.nightSalt)||!next.accepted.scheduleOverrides)throw Error('integration version/overrides missing');if(next.candidate){var c=next.candidate,m=c.metadata;if(!m)throw Error('candidate metadata mismatch');
-if(m.semanticSignature!==night.semanticSignature(c.events[0])||m.eventHash!==IntegrationSHA(NightEvents.canonical(c.events))||m.resultHash!==night.hashState(c.state)||m.controllerAttemptId!==c.attemptId||c.candidateId!=='candidate:'+m.inputId)throw Error('candidate metadata mismatch');}return next;}
   var store={load:()=>{var e=backing.load();return e?validateIntegration(e):null;},commit:(rev,next)=>{validateIntegration(next);return backing.commit(rev,next);}};
   controller=await CandidateController.createController({store:store,initialEnvelope:initial,generate:async ctx=>{
    var e=controller.getEnvelope(), n=Number(ctx.attemptId.slice(8));
    var rejected=e.archive.filter(a=>a.type==='reject').flatMap(a=>a.events.map(night.semanticSignature));
-   var input={script:{preferredActions:$('forbidDetour')&&$('forbidDetour').checked?[]:['detour'],forbiddenActions:$('forbidDetour')&&$('forbidDetour').checked?['detour']:[],featuredRoleIds:$('featuredRole').value?[$('featuredRole').value]:[]},window:{fromTotal:ctx.accepted.totalMin,toTotal:ctx.accepted.totalMin+480},attemptNo:n,nightSalt:e.integration.nightSalt,ruleVersion:'night-detour-v1',worldSeed:ctx.accepted.currentSeed,worldId:e.integration.worldId,attemptId:e.integration.worldId+':'+n,baseRevision:ctx.baseRevision,baselineHash:night.hashState(ctx.accepted),rejectedSignatures:rejected};
+   var input={script:{preferredActions:$('forbidDetour')&&$('forbidDetour').checked?[]:['detour'],forbiddenActions:$('forbidDetour')&&$('forbidDetour').checked?['detour']:[],featuredRoleIds:$('featuredRole').value?[$('featuredRole').value]:[]},window:{fromTotal:ctx.accepted.totalMin,toTotal:Math.min(ctx.accepted.totalMin+480,(Math.floor(ctx.accepted.totalMin/MINUTES_PER_DAY)+1)*MINUTES_PER_DAY)},attemptNo:n,nightSalt:e.integration.nightSalt,ruleVersion:'night-detour-v1',worldSeed:ctx.accepted.currentSeed,worldId:e.integration.worldId,attemptId:e.integration.worldId+':'+n,baseRevision:ctx.baseRevision,baselineHash:night.hashState(ctx.accepted),rejectedSignatures:rejected};
    var r=night.generateNight(input,ctx.accepted,buildDay);
    if(r.status!=='ready'){notice(r.status+' '+(r.code||'全部语义结果已拒绝'));var err=new CandidateCore.CandidateError('E_GENERATE',r.status+' '+(r.code||'noAlternative'));throw err;}
+   if(r.state.totalMin % MINUTES_PER_DAY===0 && r.state.combat){
+    var result=roundResult(r.state.combat.agents,r.state.combat.rebellionOccurred);
+    r.state.combat.roundFinished=true;r.state.combat.verdictText=result.text;
+    r.state.combat.verdictDay=Math.floor(r.state.totalMin/MINUTES_PER_DAY);r.state.combat.verdictClock=r.state.totalMin;
+    r.resultHash=night.hashState(r.state);
+   }
    return {state:r.state,events:r.events,candidateId:r.candidateId,metadata:{semanticSignature:r.semanticSignature,inputId:r.inputId,eventHash:r.eventHash,resultHash:r.resultHash,generatorAttemptId:input.attemptId,controllerAttemptId:ctx.attemptId}};
   }});
   $('featuredRole').innerHTML='<option value="">全部现存侠客</option>'+census.filter(a=>a.role==='wanderer').map(a=>'<option value="'+a.id+'">'+a.id+' '+a.name+'</option>').join('');
-  lockTime=true;$('lockTime').checked=true; integrationBusy=false;notice('隔离联合版已就绪；单标签单写者，显式 Save。');syncUI();
-  window.__worldSig=(threat)=>{var w=buildWorld(currentSeed,threat);return w.plans.map(function(q){return q.id+'@'+q.x.toFixed(3)+','+q.z.toFixed(3)+','+q.h.toFixed(2);}).join('|');};window.__homeOf=(threat)=>{var w=buildWorld(currentSeed,threat);var c=makeCensus(currentSeed,w).filter(function(a){return a.role==='merchant';})[0];var h=posOf(w,c.home);return {x:+h.x.toFixed(1),z:+h.z.toFixed(1)};};window.__agentX=()=>+agents[0].x.toFixed(1);window.__joinFaction=(id)=>{var a=agents.filter(function(p){return p.id===id;})[0];if(a)a.faction='wuxia';return a?{role:a.role,faction:a.faction}:null;};window.__who=(role)=>{return agents.filter(function(a){return a.role===role;}).slice(0,2).map(function(a){return {id:a.id,role:a.role,faction:a.faction};});};window.__place=(id,x,z)=>{var a=agents.filter(function(p){return p.id===id;})[0];a.x=x;a.z=z;return window.__screen(x,z);};window.__factionOf=(id)=>agents.filter(function(p){return p.id===id;})[0].faction;window.__outsideCount=()=>agents.filter(function(a){return a.outsider;}).length;window.__total=()=>agents.length;window.__pos=(id)=>{var a=agents.filter(function(p){return p.id===id;})[0];return {x:+a.x.toFixed(1),z:+a.z.toFixed(1)};};window.__aim=(id)=>{var a=agents.filter(function(p){return p.id===id;})[0];if(!a.aim)return '';var t=agents.filter(function(p){return p.id===a.aim;})[0];return t?t.role:'';};window.__downGuards=(n)=>{var c=0,i;for(i=0;i<agents.length&&c<n;i++){if(agents[i].role==='guard'){agents[i].downed=true;c++;}}};window.__setMinute=(m)=>{simMinute=m;dayVerdict();};window.__raiseOne=()=>{var i;for(i=0;i<agents.length;i++){if(agents[i].role==='guard'&&agents[i].downed){agents[i].downed=false;break;}}dayVerdict();};window.__verdict=()=>{var e=document.getElementById('verdict');return e?e.textContent:'';};window.__innLoaded=()=>!!heroCache['inn'];window.__innGeom=()=>{var g=heroCache['inn'];if(!g||!g.scene)return 0;var n=0;g.scene.traverse(function(o){if(o.isMesh&&o.geometry){var p=o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count;n+=p/3;}});return n;};window.__screen=(x,z)=>{var v=new THREE.Vector3(x,1,z).project(camera);return {inside:v.z<1&&Math.abs(v.x)<1&&Math.abs(v.y)<1};};window.__rebuildAs=(threat)=>{rebuild(currentSeed,threat);};window.__note=(k)=>{noteThreat(k);};window.__roll=()=>{var t=topThreat();threatLog=[];rebuild((currentSeed*1664525+1013904223)>>>0,t);var p=world.plans.filter(function(q){return q.id==='c-pagoda';})[0];return {chosen:t,pagodaH:+p.h.toFixed(0),cleared:threatLog.length};};window.__integration={envelope:()=>controller.getEnvelope(),accepted:()=>controller.readAccepted(),capture:()=>JSON.parse(JSON.stringify(captureLocalWorld())),operation:()=>controller.getOperation(),playback:()=>playback&&playback.snapshot(),sha:IntegrationSHA,canonical:NightEvents.canonical,effective:(id,d,s)=>night.effectiveDay(s.census.find(a=>a.id===id),d,s,buildDay),baseDay:(id,d,s)=>buildDay(s.census.find(a=>a.id===id),d,s.currentSeed,s.world),guardCheck:()=>{try{controller.guardWorldEdit();return 'allowed';}catch(e){return e.code;}},entryGuardCheck:()=>{var before=JSON.stringify(captureLocalWorld());placeBlock({x:40,y:0.5,z:40});applyPatchCmd();return before===JSON.stringify(captureLocalWorld());},place:(p)=>placeBlock(p),remove:(i)=>removeBlock(i),undo:()=>undoBuild(),blocks:()=>({ids:builds.map(b=>b.id),ops:buildOps.map(o=>o.op+':'+(o.id||('ref'+o.ref))),seq:buildSeq}),plan:(id,d)=>{var a=census.filter(function(x){return x.id===id;})[0];var plan=getPlan(a,d);return plan.map(function(s){return {start:s.start,end:s.end,x:s.x,z:s.z};});},building:(id)=>{var p=world.plans.filter(function(x){return x.id===id;})[0];return {x:p.x,z:p.z};},screen:(x,z)=>{var v=new THREE.Vector3(x,1,z).project(camera);return {left:(v.x*0.5+0.5)*innerWidth,top:(-v.y*0.5+0.5)*innerHeight};}}
+  lockTime=roundFinished;$('lockTime').checked=lockTime; integrationBusy=false;notice('隔离联合版已就绪；单标签单写者，显式 Save。');syncUI();
+  window.__worldSig=(threat)=>{var w=buildWorld(currentSeed,threat);return w.plans.map(function(q){return q.id+'@'+q.x.toFixed(3)+','+q.z.toFixed(3)+','+q.h.toFixed(2);}).join('|');};window.__homeOf=(threat)=>{var w=buildWorld(currentSeed,threat);var c=makeCensus(currentSeed,w,threat).filter(function(a){return a.role==='merchant';})[0];var h=posOf(w,c.home);return {x:+h.x.toFixed(1),z:+h.z.toFixed(1)};};window.__agentX=()=>+agents[0].x.toFixed(1);window.__joinFaction=(id)=>{var a=agents.filter(function(p){return p.id===id;})[0];if(a)a.faction='wuxia';return a?{role:a.role,faction:a.faction}:null;};window.__who=(role)=>{return agents.filter(function(a){return a.role===role;}).slice(0,2).map(function(a){return {id:a.id,role:a.role,faction:a.faction};});};window.__place=(id,x,z)=>{var a=agents.filter(function(p){return p.id===id;})[0];a.x=x;a.z=z;return window.__screen(x,z);};window.__factionOf=(id)=>agents.filter(function(p){return p.id===id;})[0].faction;window.__outsideCount=()=>agents.filter(function(a){return a.outsider;}).length;window.__total=()=>agents.length;window.__pos=(id)=>{var a=agents.filter(function(p){return p.id===id;})[0];return {x:+a.x.toFixed(1),z:+a.z.toFixed(1)};};window.__aim=(id)=>{var a=agents.filter(function(p){return p.id===id;})[0];if(!a.aim)return '';var t=agents.filter(function(p){return p.id===a.aim;})[0];return t?t.role:'';};window.__downGuards=(n)=>{var c=0,i;for(i=0;i<agents.length&&c<n;i++){if(agents[i].role==='guard'){agents[i].downed=true;c++;}}};window.__setMinute=(m)=>{simMinute=m;dayVerdict();};window.__raiseOne=()=>{var i;for(i=0;i<agents.length;i++){if(agents[i].role==='guard'&&agents[i].downed){agents[i].downed=false;break;}}dayVerdict();};window.__verdict=()=>{var e=document.getElementById('verdict');return e?e.textContent:'';};window.__innLoaded=()=>!!heroCache['inn'];window.__innGeom=()=>{var g=heroCache['inn'];if(!g||!g.scene)return 0;var n=0;g.scene.traverse(function(o){if(o.isMesh&&o.geometry){var p=o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count;n+=p/3;}});return n;};window.__screen=(x,z)=>{var v=new THREE.Vector3(x,1,z).project(camera);return {inside:v.z<1&&Math.abs(v.x)<1&&Math.abs(v.y)<1};};window.__rebuildAs=(threat)=>{rebuild(currentSeed,threat);};window.__note=(k)=>{noteThreat(k);};window.__roll=()=>{var t=topThreat();threatLog=[];rebuild((currentSeed*1664525+1013904223)>>>0,t);var p=world.plans.filter(function(q){return q.id==='c-pagoda';})[0];return {chosen:t,pagodaH:+p.h.toFixed(0),cleared:threatLog.length};};window.__integration={envelope:()=>controller.getEnvelope(),accepted:()=>controller.readAccepted(),capture:()=>JSON.parse(JSON.stringify(captureLocalWorld())),operation:()=>controller.getOperation(),playback:()=>playback&&playback.snapshot(),sha:IntegrationSHA,canonical:NightEvents.canonical,effective:(id,d,s)=>night.effectiveDay(s.census.find(a=>a.id===id),d,s,buildDay),baseDay:(id,d,s)=>buildDay(s.census.find(a=>a.id===id),d,s.currentSeed,s.world),guardCheck:()=>{try{controller.guardWorldEdit();return 'allowed';}catch(e){return e.code;}},entryGuardCheck:()=>{var before=JSON.stringify(captureLocalWorld());placeBlock({x:40,y:0.5,z:40});applyPatchCmd();return before===JSON.stringify(captureLocalWorld());},place:(p)=>placeBlock(p),remove:(i)=>removeBlock(i),undo:()=>undoBuild(),blocks:()=>({ids:builds.map(b=>b.id),ops:buildOps.map(o=>o.op+':'+(o.id||('ref'+o.ref))),seq:buildSeq}),plan:(id,d)=>{var a=census.filter(function(x){return x.id===id;})[0];var plan=getPlan(a,d);return plan.map(function(s){return {start:s.start,end:s.end,x:s.x,z:s.z};});},building:(id)=>{var p=world.plans.filter(function(x){return x.id===id;})[0];return {x:p.x,z:p.z};},screen:(x,z)=>{var v=new THREE.Vector3(x,1,z).project(camera);return {left:(v.x*0.5+0.5)*innerWidth,top:(-v.y*0.5+0.5)*innerHeight};}}
+  /* issue147 验证钩子：碰撞口径 / 寻路单步 / 技能波及，仅供浏览器验证脚本使用。 */
+  window.__solidAt=(x,z)=>{var b=solidAt(world,x,z);return b?b.id:'';};
+  window.__moveStep=(x,z,tx,tz,step)=>moveStep(world,x,z,tx,tz,step);
+  window.__affectNear=(cx,cz,r,mode,kind)=>affectNear(cx,cz,r,mode,kind);
+  /* issue147-adapt 验证钩子：v2 确定性 / 旧档字节冻结 / modifiers 生效 / 波次分母，仅供浏览器探针。 */
+  window.__buildWorldJSON=(threat)=>JSON.stringify(buildWorld(currentSeed,threat));
+  window.__censusJSON=(threat)=>{var w=buildWorld(currentSeed,threat);return JSON.stringify(makeCensus(currentSeed,w,threat));};
+  window.__directorMods=()=>worldModifiers(world);
+  window.__guardCount=()=>census.filter(function(c){return c.role==='guard';}).length;
+  window.__rebelCap=()=>Math.floor(census.filter(function(c){return c.role==='guard';}).length*CandidateCore.REBELLION_GUARD_FRACTION);
+  window.__patrolLen=()=>patrolFor(world).length;
+  window.__patrolHit=()=>patrolHit(world);
+  window.__stallPos=()=>world.plans.filter(function(p){return p.kind==='stall';}).map(function(p){return {id:p.id,x:p.x,z:p.z};});
+  window.__wallInfo=()=>world.plans.filter(function(p){return p.kind==='wall'&&p.zone==='city';}).map(function(p){return {id:p.id,h:p.h};});
+  window.__shelterHomes=()=>census.filter(function(c){return c.home==='v-shelter';}).map(function(c){return c.id;});
+  window.__guardDayJSON=(id)=>{var a=census.filter(function(c){return c.id===id;})[0];return JSON.stringify(buildDay(a,1,currentSeed,world));};
+  window.__threatParse=(t)=>parseDirectorThreat(t);
+  window.__rebuildSeed=(seed,threat)=>{rebuild(seed>>>0,threat);};
+  window.__adaptPanel=()=>({round:$('adaptRound').textContent,last:$('adaptLast').textContent});
+  window.__castPreview=()=>({text:$('castPreview').textContent,rings:previewGroup?previewGroup.children.length:0});
+  window.__lastDirectorReport=()=>lastDirectorReport?JSON.parse(JSON.stringify(lastDirectorReport)):null;
  }catch(e){notice('恢复失败，原存档保留 '+e.message);integrationBusy=true;}
 }
-$('localSave').addEventListener('click',()=>{if(!editGuard())return;guardedTask(async()=>{await controller.dispatch({type:'checkpoint',commandId:'save-'+(controller.getEnvelope().revision+1),expectedRevision:controller.getEnvelope().revision,state:captureLocalWorld()});notice('Save 成功，accepted checkpoint 已提交');});});
+$('localSave').addEventListener('click',()=>{if(!editGuard(true))return;guardedTask(async()=>{await controller.dispatch({type:'checkpoint',commandId:'save-'+(controller.getEnvelope().revision+1),expectedRevision:controller.getEnvelope().revision,state:captureLocalWorld()});notice('Save 成功，accepted checkpoint 已提交');});});
 function clockText(total){var m=((total%1440)+1440)%1440,d=1+Math.floor(total/1440);return '第'+d+'天 '+String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
 function placeName(id){var names={'c-inn':'客栈','c-academy':'书院'};if(names[id])return names[id];var p=world.plans.filter(function(x){return x.id===id;})[0];return p?p.kind:id;}
 function candidateSentence(e){var c=e.candidate,ev=c.events[0],who=ev.participants[0],person=census.filter(function(a){return a.id===who;})[0],name=person?person.name:who,place=placeName(ev.target&&ev.target.id);return name+'留下了，绕到'+place+'走了半个时辰。时钟从 '+clockText(e.accepted.totalMin)+' 到 '+clockText(c.state.totalMin)+'。种子不变。';}
-function startNight(){if(integrationBusy||controller.getEnvelope().candidate){if(controller.getEnvelope().candidate){controller.open();syncUI();}return;}guardedTask(async()=>{var e=controller.getEnvelope(),n=e.attemptNo+1;await controller.generateCandidate({beginCommand:{type:'begin',commandId:'begin-'+n,expectedRevision:e.revision},publishCommandId:'publish-'+n,candidateId:'provisional-'+n});controller.open();notice('候选已生成，旧世界还在');});}
+function startNight(){if(roundFinished){notice('本局已结束，请重建或换城开始新的一局');return;}if(integrationBusy||controller.getEnvelope().candidate){if(controller.getEnvelope().candidate){controller.open();syncUI();}return;}if(personDrag||agents.some(a=>a.held)){notice('请先结束拖拽');return;}guardedTask(async()=>{var e=controller.getEnvelope();await controller.dispatch({type:'checkpoint',commandId:'night-save-'+(e.revision+1),expectedRevision:e.revision,state:captureLocalWorld()});e=controller.getEnvelope();var n=e.attemptNo+1;await controller.generateCandidate({beginCommand:{type:'begin',commandId:'begin-'+n,expectedRevision:e.revision},publishCommandId:'publish-'+n,candidateId:'provisional-'+n});controller.open();notice('候选已生成，旧世界还在');});}
 $('integrationFold').onclick=function(){var b=$('integrationBody');b.hidden=!b.hidden;};
 $('generateNight').onclick=startNight;
 $('pendingOpen').onclick=()=>{controller.open();syncUI();};
@@ -1862,7 +2144,8 @@ async function decide(type){var e=controller.getEnvelope(),c=e.candidate;if(!c)r
 $('candidateAccept').onclick=()=>guardedTask(()=>decide('accept'));
 $('candidateReject').onclick=()=>guardedTask(()=>decide('reject'));
 $('repeatDecision').onclick=()=>guardedTask(async()=>{if(lastDecision)await controller.dispatch(lastDecision);notice('原命令重送完成');});
-$('recover').onclick=()=>guardedTask(async()=>{await controller.recover();notice('recover 已读取权威 envelope');});
+$('recover').onclick=()=>guardedTask(async()=>{await controller.recover();hydrateLocalWorld(controller.readAccepted());notice('recover 已读取权威 envelope');});
+$('cancelInterrupted').onclick=()=>guardedTask(async()=>{var e=controller.getEnvelope();await controller.dispatch({type:'cancel',commandId:'cancel-'+e.attemptNo,expectedRevision:e.revision});hydrateLocalWorld(controller.readAccepted());notice('已取消中断生成，恢复已保存世界');});
 $('exportEnvelope').onclick=()=>downloadJSON(controller.getEnvelope(),'envelope.json');
 $('openArchive').onclick=()=>{var a=controller.getEnvelope().archive;playback=Playback.createPlayback(a.length?a[a.length-1].events:[]);$('playbackReadout').textContent=JSON.stringify(playback.snapshot());};
 ['step','skip','replay'].forEach(op=>{$('playback'+op).onclick=()=>{if(playback)$('playbackReadout').textContent=JSON.stringify(playback[op]());};});
@@ -1870,11 +2153,12 @@ $('applyClock').onclick=()=>{if(!editGuard())return;day=Math.max(1,Number($('che
 
 var stage = $('stage'), labels = $('labels'), clockOut = $('clock'), minuteSlider = $('minute'), seedInput = $('seed');
 var barFill = $('bar').firstElementChild;
-var mode = 'lego', buildMode = false, removeMode = false, blockType = 'wood', orbitOn = false, speed = 1, soundOn = false, lockTime = false;
+var mode = 'lego', buildMode = false, removeMode = false, blockType = 'wood', orbitOn = false, speed = 1, realDaySeconds = DEFAULT_REAL_DAY_SECONDS, soundOn = false, lockTime = false;
 var currentSeed = 20260818, world = null, census = [], agents = [], builds = [], buildOps = [], buildSeq = 0, dayPlans = {};
 var planOverrides = {}, patchAudit = [], roleTint = {};
 function currentPlans() { return applyOverrides(world.plans, planOverrides); }
-var totalMin = 1080, day = 1, simMinute = 1080;
+var totalMin = 0, day = 1, simMinute = 0;
+var rebellionOccurred = false, rebellionWaves = {}, roundFinished = false, verdictText = '', verdictDay = 0, verdictClock = totalMin, quakeUntil = 0;
 var renderer, scene, camera, hemi, sun, sky, skyGeo, sunDisc, moonDisc, groundGeo, groundMesh;
 try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch (err) { $('fatal').style.display = 'grid'; return; }
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -2095,9 +2379,9 @@ legoPlastic.onBeforeCompile = function (shader) {
     .replace('#include <map_fragment>', '#ifdef USE_MAP\nvec3 wn = normalize(vWNorm);\nvec3 aw = abs(wn);\nvec2 wuv;\nif (aw.y >= aw.x && aw.y >= aw.z) wuv = vWPos.xz;\nelse if (aw.x >= aw.z) wuv = vWPos.zy;\nelse wuv = vWPos.xy;\nwuv *= 0.114;\nvec4 sampledDiffuseColor = texture2D(map, wuv);\ndiffuseColor *= sampledDiffuseColor;\n#endif');
 };
 window.__wuxiaLegoTex = true;
-var bodyMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.46, 0.76, 0.3), stdMat(0.8), CENSUS_N);
-var headMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.22, 10, 8), stdMat(0.8), CENSUS_N);
-var hatMesh = new THREE.InstancedMesh(new THREE.ConeGeometry(0.32, 0.3, 8), stdMat(0.8), CENSUS_N);
+var bodyMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.46, 0.76, 0.3), stdMat(0.8), CENSUS_CAP);
+var headMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.22, 10, 8), stdMat(0.8), CENSUS_CAP);
+var hatMesh = new THREE.InstancedMesh(new THREE.ConeGeometry(0.32, 0.3, 8), stdMat(0.8), CENSUS_CAP);
 [boxMesh, roofMesh, coneMesh, trunkMesh, topMesh, winMesh, blockMesh, bodyMesh, headMesh, hatMesh].forEach(function (m) {
   m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false;
   m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m);
@@ -2152,6 +2436,66 @@ window.__feedbackSet = function (kind, id) {
 };
 /* ================= RENDER §7 图纸 → 实例部件 ================= */
 var parts = [], winParts = [], partBySlot = {}, dummy = new THREE.Object3D(), scratchColor = new THREE.Color();
+// 粒子共用一次实例绘制，避免每次技能生成大量独立网格。
+var FX_PARTICLES = 28, MAX_SKILL_EFFECTS = 8, skillEffects = [], fxFrozen = false;
+var fxMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }), FX_PARTICLES * MAX_SKILL_EFFECTS);
+fxMesh.count = 0; fxMesh.frustumCulled = false; fxMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(fxMesh);
+var fxDummy = new THREE.Object3D(), fxColor = new THREE.Color();
+var SKILL_FX = { '陨石':'meteor', '流星碎石':'meteor', '落雷':'lightning', '雷火':'lightning',
+  '大火':'fire', '灶火':'fire', '野火':'fire', '火攻':'fire', '市集起火':'fire', '火药':'impact',
+  '地震':'quake', '地裂':'crack', '龙卷风':'wind', '冰雹':'ice', '投石':'impact', '挖墙':'impact' };
+function spawnSkillEffect(kind, x, z) {
+  var mode = SKILL_FX[kind]; if (!mode) return;
+  if (skillEffects.length >= MAX_SKILL_EFFECTS) skillEffects.shift();
+  skillEffects.push({ kind:kind, mode:mode, x:x, z:z, age:0 });
+}
+function clearSkillEffects() { skillEffects = []; fxMesh.count = 0; }
+function updateSkillEffects(dt) {
+  var count = 0;
+  for (var e = skillEffects.length - 1; e >= 0; e--) {
+    var fx = skillEffects[e]; fx.age += Math.min(dt, 0.1);
+    var lifetime = fx.mode === 'lightning' ? 1.4 : 2.8;
+    if (fx.age >= lifetime) { skillEffects.splice(e, 1); continue; }
+    for (var i = 0; i < FX_PARTICLES; i++) {
+      var angle = i * 2.39996, r = 1 + (i % 7) * 0.6, x = 0, y = 0, z = 0, sx = 0.5, sy = 0.5, sz = 0.5, color = 0xffa32b;
+      if (fx.mode === 'meteor') {
+        if (i < 6 && fx.age < 0.85) {
+          y = 24 * (1 - fx.age / 0.85) + 2 + i * 0.65; x = Math.cos(angle) * (i % 2); z = Math.sin(angle) * (i % 2);
+          sx = sy = sz = i ? 1.4 : 3; color = i % 2 ? 0xffc642 : 0xff5a16;
+        } else { var burst = Math.max(0, fx.age - 0.45); r = 1 + burst * (2 + i % 5); x = Math.cos(angle) * r; z = Math.sin(angle) * r; y = 0.8 + burst * (2 + i % 4); sx = sy = sz = burst > 0 ? 0.6 + (i % 3) * 0.18 : 0; color = i % 2 ? 0xffc642 : 0xf4541b; }
+      } else if (fx.mode === 'lightning') {
+        if (i < 16) { x = Math.sin(i * 1.8) * 0.7; z = Math.cos(i * 1.3) * 0.5; y = 1 + i * 1.25; sx = sz = 0.65; sy = 2.0; color = i % 2 ? 0xfff3a4 : 0xffffff; }
+        else { r = 1 + fx.age * 4; x = Math.cos(angle) * r; z = Math.sin(angle) * r; y = 0.5 + (i % 4); color = 0xffe16a; }
+      } else if (fx.mode === 'fire') {
+        r = 0.8 + (i % 6) * 0.55; x = Math.cos(angle + fx.age) * r; z = Math.sin(angle + fx.age) * r;
+        y = 0.8 + ((fx.age * 3.4 + i * 0.39) % 8); sx = sz = 0.55 + (i % 3) * 0.12; sy = 1.1; color = i % 3 ? 0xff7b1b : 0xffd45a;
+      } else if (fx.mode === 'wind') {
+        r = 1.5 + (i % 4) * 0.65; var spin = angle + fx.age * 5; x = Math.cos(spin) * r; z = Math.sin(spin) * r;
+        y = 0.8 + (i % 12) * 0.85; sx = sz = 0.8; sy = 0.35; color = 0xc9f5ff;
+      } else if (fx.mode === 'ice') {
+        r = 1 + (i % 7) * 0.8; x = Math.cos(angle) * r; z = Math.sin(angle) * r;
+        y = 1 + ((15 + i * 0.7 - fx.age * 8) % 15 + 15) % 15; sx = sy = sz = 0.65; color = i % 2 ? 0x9cddff : 0xe8fbff;
+      } else if (fx.mode === 'crack') {
+        // issue147-adapt 视觉修正：地裂粒子提亮增强静帧辨识度（tester 视觉轮观察项）。
+        // 主体 0x3a2a20 + 每 4 实例一枚浅色边缘碎屑 0xd8cfc0；复用既有实例化逐实例颜色，不新增 draw call 类型，按索引纯确定性。
+        x = (i - FX_PARTICLES / 2) * 0.75; z = Math.sin(i * 1.6) * 0.5; y = 0.3; sx = 0.75; sy = 0.26; sz = 0.32; color = 0x3a2a20;
+        if (i % 4 === 3) { y = 0.42; z += 0.6; sx = 0.42; sy = 0.34; sz = 0.42; color = 0xd8cfc0; }
+      } else {
+        r = 1 + fx.age * (1.5 + i % 5); x = Math.cos(angle) * r; z = Math.sin(angle) * r;
+        y = 0.5 + Math.max(0, 5 * fx.age - 2.5 * fx.age * fx.age) * (0.5 + (i % 4) * 0.2); color = i % 2 ? 0xb78d65 : 0x76533d;
+      }
+      fxDummy.position.set(fx.x + x, y, fx.z + z); fxDummy.rotation.set(0, angle, 0); fxDummy.scale.set(sx, sy, sz); fxDummy.updateMatrix();
+      fxMesh.setMatrixAt(count, fxDummy.matrix); fxColor.setHex(color); fxMesh.setColorAt(count, fxColor); count++;
+    }
+  }
+  fxMesh.count = count; fxMesh.instanceMatrix.needsUpdate = true; if (fxMesh.instanceColor) fxMesh.instanceColor.needsUpdate = true;
+}
+window.__skillFxTest = {
+  state: function () { return { modes: skillEffects.map(function (x) { return x.mode; }), instances: fxMesh.count }; },
+  freeze: function () { fxFrozen = true; },
+  show: function (visible) { fxMesh.visible = !!visible; renderer.render(scene, camera); },
+  resume: function () { fxFrozen = false; last = 0; fxMesh.visible = true; }
+};
 function addPart(mesh, x, y, z, w, h, d, key, plan, extra) {
   var p = { mesh: mesh, x: x, y: y, z: z, w: w, h: h, d: d, key: key, plan: plan, idx: parts.length,
     t0: plan ? plan.t0 + (extra || 0) : 0, dur: plan ? plan.dur : 0.7, startY: plan ? plan.startY : 24, spawned: false };
@@ -2172,6 +2516,12 @@ function planParts(p) {
       var u = ((i + 0.5) / n - 0.5) * p.w * 0.7;
       addWin(p.x + u, p.h * 0.55, p.z + p.d / 2 + 0.05, 0.55, 0.62, 0, p);
     }
+  } else if (p.kind === 'shelter') {
+    addPart('box', p.x, p.h, p.z, p.w, 0.6, p.d, 'stone', p);
+    addPart('box', p.x - p.w / 2 + 0.3, p.h / 2, p.z, 0.6, p.h, p.d, 'stone', p);
+    addPart('box', p.x + p.w / 2 - 0.3, p.h / 2, p.z, 0.6, p.h, p.d, 'stone', p);
+    addPart('box', p.x, p.h / 2, p.z - p.d / 2 + 0.3, p.w, p.h, 0.6, 'stone', p);
+    addPart('box', p.x, 0.15, p.z, p.w, 0.3, p.d, 'stone', p);
   } else if (p.kind === 'pagoda') {
     var pitch = p.h / Math.max(1, p.floors);
     for (i = 0; i < p.floors; i++) {
@@ -2401,12 +2751,12 @@ function markAssetParts() {
   var i;
   for (i = 0; i < parts.length; i++) {
     var p = parts[i];
-    p.assetHidden = !!(mode === 'lego' && p.plan && HERO_MAP[p.plan.id] && heroCache[HERO_MAP[p.plan.id]]);
+    p.assetHidden = !!(mode === 'lego' && p.plan && !toppled[p.plan.id] && HERO_MAP[p.plan.id] && heroCache[HERO_MAP[p.plan.id]]);
   }
   for (i = 0; i < winParts.length; i++) {
     var w = winParts[i];
     if (w.key === 'lantern') w.assetHidden = (mode === 'lego');
-    else w.assetHidden = !!(mode === 'lego' && w.plan && HERO_MAP[w.plan.id] && heroCache[HERO_MAP[w.plan.id]]);
+    else w.assetHidden = !!(mode === 'lego' && w.plan && !toppled[w.plan.id] && HERO_MAP[w.plan.id] && heroCache[HERO_MAP[w.plan.id]]);
   }
 }
 function heroPlan(id, baseOnly) {
@@ -2743,11 +3093,11 @@ var outsiderSent = false;
 function sendOutsider() {
   if (outsiderSent) return;
   var joined = false, i, a;
-  for (i = 0; i < agents.length; i++) if (agents[i].faction === 'wuxia' && agents[i].role !== 'wanderer') joined = true;
+  for (i = 0; i < agents.length; i++) if (agents[i].faction === 'wuxia' && agents[i].role !== 'wanderer' && !agents[i].dead && !agents[i].downed && !agents[i].flying) joined = true;
   if (!joined) return;
   for (i = 0; i < agents.length; i++) {
     a = agents[i];
-    if (a.role !== 'wanderer') continue;
+    if (a.role !== 'wanderer' || a.dead || a.downed) continue;
     a.x = 0; a.z = 30; a.outsider = true;
     outsiderSent = true;
     return;
@@ -2757,10 +3107,10 @@ function recruitOffscreen() {
   var i, j, a, b;
   for (i = 0; i < agents.length; i++) {
     a = agents[i];
-    if (a.role !== 'wanderer') continue;
+    if (a.role !== 'wanderer' || a.dead || a.downed) continue;
     for (j = 0; j < agents.length; j++) {
       b = agents[j];
-      if (b.faction !== 'folk' || b.role === 'wanderer' || b.role === 'guard') continue;
+      if (b.dead || b.downed || b.faction !== 'folk' || b.role === 'wanderer' || b.role === 'guard') continue;
       if (Math.abs(a.x - b.x) + Math.abs(a.z - b.z) > 3) continue;
       if (onScreen(b.x, b.z)) continue;
       b.faction = 'wuxia';
@@ -2771,25 +3121,82 @@ function recruitOffscreen() {
     }
   }
 }
-function dayVerdict() {
-  var guards = 0, i;
-  for (i = 0; i < agents.length; i++) if (agents[i].role === 'guard' && !agents[i].downed) guards++;
-  var ended = simMinute >= 1439;
-  var el = document.getElementById('verdict');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'verdict';
-    el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);font:16px sans-serif';
-    document.body.appendChild(el);
+// 两段夜间各分两波；每波只允许每名武侠出手一次。
+var REBELLION_WINDOWS = [[120, 300], [300, 360], [1200, 1380], [1380, 1440]];
+function currentRebellionWave(total) {
+  var dayIndex = Math.floor(total / MINUTES_PER_DAY), minute = total % MINUTES_PER_DAY;
+  for (var i = 0; i < REBELLION_WINDOWS.length; i++) {
+    if (minute >= REBELLION_WINDOWS[i][0] && minute < REBELLION_WINDOWS[i][1]) return dayIndex * REBELLION_WINDOWS.length + i;
   }
-  var freed = ended && guards === 0;
-  el.textContent = freed ? '\u57ce\u88ab\u89e3\u653e' : '';
-  if (freed && !gateLight.userData.on) { gateLight.userData.on = true; gateLight.userData.t = 0; }
+  return -1;
+}
+function tryRebelAttack(attacker, guard) {
+  var wave = currentRebellionWave(totalMin);
+  if (wave < 0) return false;
+  var attackers = rebellionWaves[wave] || [], cap = Math.floor(census.filter(function (a) { return a.role === 'guard'; }).length * CandidateCore.REBELLION_GUARD_FRACTION);
+  if (attackers.length >= cap || attackers.indexOf(attacker.id) !== -1) return false;
+  if (!rebellionWaves[wave]) rebellionWaves[wave] = attackers;
+  attackers.push(attacker.id);
+  guard.downed = true; guard.downedBy = attacker.id; rebellionOccurred = true;
+  return true;
+}
+function roundResult(actors, rebelled) {
+  var standing = 0, alive = 0, guards = 0, civilianDead = false;
+  for (var i = 0; i < actors.length; i++) {
+    var a = actors[i];
+    if (a.role !== 'guard') { if (a.dead) civilianDead = true; continue; }
+    guards++;
+    if (!a.dead) { alive++; if (!a.downed) standing++; }
+  }
+  var freed = guards > 0 && alive === 0 && !civilianDead;
+  return { freed: freed, text: freed ? '善胜利：守卫已死光' :
+    (rebelled && standing > 0 ? '恶胜利：仍有守卫站立' :
+     (rebelled && standing === 0 ? '失败：守卫全部倒下，城镇被解放' : '本局结束：未达成胜利条件')) };
+}
+function renderVerdict() {
+  // issue147 收尾：结论文字放进浅色底面板，夜景下可读；roundFinished 时露出「下一局」。
+  // #verdict 保持纯文本节点（window.__verdict 与既有断言只读结论文字，不含按钮文案）。
+  var panel = document.getElementById('verdictPanel');
+  if (!panel && verdictText) {
+    panel = document.createElement('div');
+    panel.id = 'verdictPanel';
+    var el = document.createElement('div');
+    el.id = 'verdict';
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.id = 'nextRound'; btn.textContent = '下一局';
+    btn.addEventListener('click', function () {
+      // 局末死胡同修复：file:// 也可用，走既有 rebuild 流程开新局
+      if (!roundFinished || !editGuard(true)) return;
+      localRuleRebuild('下一局（本地规则）：');
+    });
+    panel.appendChild(el); panel.appendChild(btn);
+    document.body.appendChild(panel);
+  }
+  if (panel) {
+    panel.style.display = verdictText ? 'flex' : 'none';
+    document.getElementById('verdict').textContent = verdictText;
+    document.getElementById('nextRound').hidden = !roundFinished;
+  }
+  renderAdaptPanel(); // issue147-adapt N2：胜负变化同步画像面板
+}
+function dayVerdict() {
+  var crossedDay = totalMin > verdictClock && Math.floor(totalMin / MINUTES_PER_DAY) > Math.floor(verdictClock / MINUTES_PER_DAY);
+  var endedDay = crossedDay ? Math.floor(totalMin / MINUTES_PER_DAY) : 0;
+  if (endedDay && endedDay >= verdictDay) {
+    var result = roundResult(agents, rebellionOccurred);
+    verdictText = result.text; verdictDay = endedDay;
+    if (result.freed && !gateLight.userData.on) { gateLight.userData.on = true; gateLight.userData.t = 0; }
+  }
+  verdictClock = totalMin;
+  renderVerdict();
 }
 function updateAgents(dt, t) {
-  if (!window.__holdRecruit) recruitOffscreen();
-  dayVerdict();
-  sendOutsider();
+  var frozen = worldEditBlocked() || guideIsOpen() || roundFinished;
+  if (!frozen) {
+    if (!window.__holdRecruit) recruitOffscreen();
+    dayVerdict();
+    sendOutsider();
+  }
   var visible = 0, i, hold = 0.14, pose = mode === 'lego' ? Math.floor(t / hold) : -1;
   speakBudget = 2;
   visibleAgents.length = 0;
@@ -2797,9 +3204,9 @@ function updateAgents(dt, t) {
     var a = agents[i], plan = getPlan(a, day), si = segAt(plan, simMinute), sg = plan[si];
     if (si !== a.segIdx) {
       a.segIdx = si;
-      if (sg.activity !== 'sleep' && speakBudget > 0) { speakBudget--; speak(a, si); }
+      if (!a.dead && !a.downed && sg.activity !== 'sleep' && speakBudget > 0) { speakBudget--; speak(a, si); }
     }
-    if (a.held && a.role === 'wanderer') {
+    if (a.held && !a.dead && !a.downed && a.role === 'wanderer') {
       a.x = a.lockX; a.z = a.lockZ; a.visible = true;
       dummy.position.set(a.x, 0.38, a.z); dummy.rotation.set(0, a.heading || 0, 0); dummy.scale.set(1, 1, 1);
       dummy.updateMatrix(); bodyMesh.setMatrixAt(visible, dummy.matrix);
@@ -2808,10 +3215,12 @@ function updateAgents(dt, t) {
       a.slot = visible; visibleAgents[visible] = a; visible++;
       continue;
     }
-    if (a.flying) {
-      a.x += a.vx * dt; a.z += a.vz * dt;
-      a.flyT = (a.flyT || 0) + dt;
-      if (a.flyT > 0.45) { a.flying = false; a.downed = true; a.y = 0; }
+    if (a.flying && !a.dead && !a.downed) {
+      if (!frozen) {
+        a.x += a.vx * dt; a.z += a.vz * dt;
+        a.flyT = (a.flyT || 0) + dt;
+        if (a.flyT > 0.45) { a.flying = false; a.downed = true; a.y = 0; }
+      }
       a.visible = true;
       dummy.position.set(a.x, 0.38 + a.y, a.z); dummy.rotation.set(0, a.heading || 0, 0); dummy.scale.set(1, 1, 1);
       dummy.updateMatrix(); bodyMesh.setMatrixAt(visible, dummy.matrix);
@@ -2820,10 +3229,11 @@ function updateAgents(dt, t) {
       a.slot = visible; visibleAgents[visible] = a; visible++;
       continue;
     }
-    if (sg.activity === 'sleep') { a.visible = false; continue; }
+    var rebelAwake = !a.dead && !a.downed && (a.role === 'wanderer' || a.faction === 'wuxia') && currentRebellionWave(totalMin) >= 0;
+    if (sg.activity === 'sleep' && !rebelAwake && !a.dead && !a.downed) { a.visible = false; continue; }
     a.visible = true;
     a.act = sg.activity;
-    if (a.downed) {
+    if (a.dead || a.downed) {
       var tilt = a.role === 'wanderer' ? 0 : 1.2;
       dummy.position.set(a.x, 0.2, a.z); dummy.rotation.set(tilt, a.heading, 0); dummy.scale.set(1, 1, 1);
       dummy.updateMatrix(); bodyMesh.setMatrixAt(visible, dummy.matrix);
@@ -2846,33 +3256,36 @@ function updateAgents(dt, t) {
       continue;
     }
     /* 乐高档定格：0.14 秒换一格，格与格之间位置不动。白模档仍逐帧。 */
-    var advance = mode !== 'lego' || a.pose !== pose;
+    var advance = !frozen && (mode !== 'lego' || a.pose !== pose);
     if (advance) {
       if (mode === 'lego') a.pose = pose;
       var useT = mode === 'lego' ? pose * hold : t;
       var useDt = mode === 'lego' ? hold : dt;
       var tx = sg.x, tz = sg.z;
-      if (a.faction === 'wuxia' && a.role !== 'wanderer' && a.role !== 'guard') {
+      if ((a.role === 'wanderer' || a.faction === 'wuxia') && a.role !== 'guard') {
         var near = null, nd = 1e9, k, g;
         for (k = 0; k < agents.length; k++) {
           g = agents[k];
-          if (g.role !== 'guard' || g.downed) continue;
+          if (g.role !== 'guard' || g.dead || g.downed || g.flying) continue;
           var gd = Math.abs(g.x - a.x) + Math.abs(g.z - a.z);
           if (gd < nd) { nd = gd; near = g; }
         }
-        if (near) { tx = near.x; tz = near.z; a.aim = near.id; }
+        if (near) {
+          tx = near.x; tz = near.z; a.aim = near.id;
+          if (Math.hypot(tx - a.x, tz - a.z) <= 1.2) tryRebelAttack(a, near);
+        }
       }
       var dx = tx - a.x, dz = tz - a.z, dist = Math.sqrt(dx * dx + dz * dz);
       var spd = (a.role === 'wanderer' ? 2.3 : 1.8) * useDt;
       if (dist > 0.5) {
         var step = Math.min(spd, dist);
-        var nxt = moveStep(world, a.x, a.z, sg.x, sg.z, step);
+        var nxt = moveStep(world, a.x, a.z, tx, tz, step);
         var mx = nxt.x - a.x, mz = nxt.z - a.z;
         a.x = nxt.x; a.z = nxt.z;
         if (mx * mx + mz * mz > 1e-8) a.heading = Math.atan2(mx, mz);
       } else {
         var ph = (hash32(a.id) % 628) / 100;
-        var idle = idleSway(world, sg.x, sg.z, sg.activity, useT, ph);
+        var idle = idleSway(world, tx, tz, sg.activity, useT, ph);
         a.x = idle.x; a.z = idle.z;
         a.heading = Math.atan2(Math.cos(useT * 0.6 + ph), -Math.sin(useT * 0.47 + ph * 1.7));
       }
@@ -2942,7 +3355,8 @@ function updateAgents(dt, t) {
   bodyMesh.count = visible; headMesh.count = visible; hatMesh.count = visible;
   window.__wuxiaAgents = agents.map(function (q) {
     var screen = project(q.x, 1, q.z);
-    return { id: q.id, role: q.role, x: q.x, z: q.z, visible: q.visible, downed: !!q.downed,
+    return { id: q.id, role: q.role, faction: q.faction, x: q.x, z: q.z, visible: q.visible, downed: !!q.downed,
+      dead: !!q.dead, deathCause: q.deathCause || '', downedBy: q.downedBy || '',
       sx: screen ? screen.x : null, sy: screen ? screen.y : null };
   });
   [bodyMesh, headMesh, hatMesh].forEach(function (m) {
@@ -3080,6 +3494,17 @@ function undoBuild() {
   rebuildBlocks();
 }
 /* ================= RENDER §11.5 inspect 面板（F-03/F-04 的「查」；改走 M3） ================= */
+function inspectPerson(a) {
+  var name = a.role === 'wanderer' ? '身份未明的百姓' : roleOf(a.role).zh;
+  var status = a.dead ? '死亡' : (a.downed ? '倒地' : '行动中');
+  var relation = a.role === 'guard' ? '守卫维持秩序，与反抗的武侠敌对。' : '百姓可能被武侠拉拢；身份需要观察。';
+  var html = '<b>' + name + ' · ' + a.name + '</b><br>状态：' + status + '<br>' + relation;
+  var el = $('inspect');
+  el.innerHTML = html + '<button type="button" id="inspectClose" aria-label="关闭">×</button>';
+  el.style.display = 'block';
+  $('inspectClose').addEventListener('click', function () { el.style.display = 'none'; });
+  window.__wuxiaLastInspect = html;
+}
 function pickInspect(e) {
   pointerNDC.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointerNDC, camera);
@@ -3088,19 +3513,12 @@ function pickInspect(e) {
   if (hits.length) {
     var h = hits[0];
     if (h.object === bodyMesh && h.instanceId !== undefined && visibleAgents[h.instanceId]) {
-      var a = visibleAgents[h.instanceId], R = roleOf(a.role);
-      var plan = getPlan(a, day), sg = plan[segAt(plan, simMinute)];
-      html = '<b>' + a.id + '</b> · ' + R.zh + '·' + a.name + ' · ' + a.age + '岁<br>住所 ' + a.home + ' · 工作 ' + a.work +
-        '<br>当前：' + (ACT_ZH[sg.activity] || sg.activity) + '（' + fmt(sg.start) + '–' + fmt(sg.end) + '）' +
-        '<span class="note">改：M3 补丁通道（把 ' + a.id + ' 的 hat 改成 red）</span>';
+      inspectPerson(visibleAgents[h.instanceId]);
+      return;
     } else if (h.object === boxMesh && h.instanceId !== undefined && partBySlot.box[h.instanceId]) {
       var p = partBySlot.box[h.instanceId].plan;
-      if (p && p.id && typeof p.w === 'number') html = '<b>' + p.id + '</b> · ' + p.zone + ' · ' + p.kind +
-        '<br>体量 ' + p.w.toFixed(1) + '×' + p.d.toFixed(1) + '×' + p.h.toFixed(1) + ' · ' + p.floors + ' 层' +
-        '<span class="note">改：M3 AI 补丁通道（点名 ID + 审计回滚）</span>';
-      else if (p && p.id) html = '<b>' + p.id + '</b> · 道具 · ' + p.kind +
-        '<br>缩放 ' + (typeof p.s === 'number' ? p.s.toFixed(2) : '1') +
-        '<span class="note">道具不参与补丁</span>';
+      if (p && p.id && typeof p.w === 'number') html = '<b>' + p.id + '</b> · ' + p.zone + ' · ' + p.kind;
+      else if (p && p.id) html = '<b>' + p.id + '</b> · 道具 · ' + p.kind;
     }
   }
   if (html) {
@@ -3131,7 +3549,7 @@ function setFP(on) {
   }
 }
 var dragging = false, lastX = 0, lastY = 0, downX = 0, downY = 0, moved = 0;
-var personDrag = null, dragSamples = [];
+var personDrag = null, clickedPerson = null, pointerSelect = false, dragSamples = [];
 function groundAt(e) {
   pointerNDC.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointerNDC, camera);
@@ -3165,17 +3583,20 @@ renderer.domElement.addEventListener('pointerdown', function (e) {
   window.__wuxiaDown = (window.__wuxiaDown || 0) + 1;
   activePointers[e.pointerId] = { x: e.clientX, y: e.clientY };
   if (ptrCount() === 1) {
-    dragging = true; lastX = e.clientX; lastY = e.clientY; downX = e.clientX; downY = e.clientY; moved = 0;
-    if (!buildMode && e.button === 0) {
+    dragging = e.pointerType === 'touch' || (e.button === 0 && e.ctrlKey);
+    pointerSelect = e.button === 0 && !e.ctrlKey; clickedPerson = null;
+    lastX = e.clientX; lastY = e.clientY; downX = e.clientX; downY = e.clientY; moved = 0;
+    if (!worldEditBlocked() && !roundFinished && !buildMode && pointerSelect) {
       var who = personAt(e);
+      clickedPerson = who;
       window.__wuxiaPick = who ? { id: who.id, role: who.role } : null;
-      if (who && who.role === 'wanderer') {
+      if (who && who.role === 'wanderer' && !who.dead && !who.downed) {
         who.held = true; who.lockX = who.x; who.lockZ = who.z;
         window.__wuxiaLock = { id: who.id, x: who.x, z: who.z, held: who.held };
         dragging = false;
         window.__wuxiaDrag = { id: who.id, role: who.role, x0: who.x, z0: who.z, refused: true };
       }
-      if (who && who.role !== 'wanderer' && !who.downed) {
+      if (who && who.role !== 'wanderer' && !who.dead && !who.downed) {
         personDrag = who; dragSamples = [{ t: performance.now(), x: who.x, z: who.z }];
         window.__wuxiaDrag = { id: who.id, role: who.role, x0: who.x, z0: who.z };
         who.held = true; dragging = false;
@@ -3190,7 +3611,7 @@ renderer.domElement.addEventListener('pointermove', function (e) {
     var d = ptrDist();
     if (pinchDist > 0 && d > 0) cam.gr = Math.max(24, Math.min(210, cam.gr * pinchDist / d));
     pinchDist = d;
-  } else if (personDrag) {
+  } else if (personDrag && !worldEditBlocked()) {
     var g = groundAt(e);
     if (g) { personDrag.x = g.x; personDrag.z = g.z; }
     dragSamples.push({ t: performance.now(), x: personDrag.x, z: personDrag.z });
@@ -3201,6 +3622,9 @@ renderer.domElement.addEventListener('pointermove', function (e) {
     cam.theta -= (e.clientX - lastX) * 0.005;
     cam.phi -= (e.clientY - lastY) * 0.005;
     cam.phi = Math.max(0.12, Math.min(1.45, cam.phi));
+    moved += Math.abs(e.clientX - lastX) + Math.abs(e.clientY - lastY);
+    lastX = e.clientX; lastY = e.clientY;
+  } else if (activePointers[e.pointerId]) {
     moved += Math.abs(e.clientX - lastX) + Math.abs(e.clientY - lastY);
     lastX = e.clientX; lastY = e.clientY;
   }
@@ -3216,7 +3640,7 @@ renderer.domElement.addEventListener('pointerup', function (e) {
   pinchDist = ptrCount() === 2 ? ptrDist() : 0;
   if (personDrag && ptrCount() === 0) {
     window.__wuxiaMoved = moved;
-    if (moved >= 12) {
+    if (moved >= 12 && !worldEditBlocked()) {
       var n = dragSamples.length, a = dragSamples[0], b = dragSamples[n - 1];
       var seconds = Math.max(0.016, (b.t - a.t) / 1000);
       personDrag.vx = Math.max(-8, Math.min(8, (b.x - a.x) / seconds));
@@ -3233,16 +3657,17 @@ renderer.domElement.addEventListener('pointerup', function (e) {
   if (ptrCount() === 0) {
     for (var hi = 0; hi < agents.length; hi++) if (agents[hi].role === 'wanderer') agents[hi].held = false;
   }
-  if (dragging && moved < 6 && e.button === 0 && ptrCount() === 0) {
+  if (pointerSelect && moved < 6 && e.button === 0 && ptrCount() === 0) {
     if (buildMode) {
       var hit = pickBuild(e);
       if (hit) {
         if (removeMode) { if (hit.remove >= 0) removeBlock(hit.remove); }
         else placeBlock(hit.place);
       }
-    } else pickInspect(e);
+    } else if (clickedPerson) inspectPerson(clickedPerson);
+    else pickInspect(e);
   }
-  if (ptrCount() === 0) dragging = false;
+  if (ptrCount() === 0) { dragging = false; clickedPerson = null; pointerSelect = false; }
 });
 window.addEventListener('pointercancel', function (e) {
   delete activePointers[e.pointerId];
@@ -3379,7 +3804,7 @@ function setMode(m) {
   window.__wuxiaTentMat = lego ? 'cloth' : 'clay';
 }
 var threatLog = [];
-function noteThreat(kind) { threatLog.push(kind); }
+function noteThreat(kind) { threatLog.push(kind); renderAdaptPanel(); }
 function topThreat() {
   var best = '', n = 0, i, j, c;
   for (i = 0; i < threatLog.length; i++) {
@@ -3388,23 +3813,229 @@ function topThreat() {
   }
   return best;
 }
+function localRuleRebuild(prefix) {
+  // issue147 收尾：本地规则换世界——topThreat 裸技能（不加 director 前缀），
+  // 与后端导演结果明确区分；提示前缀由调用方传入，必须标明本地来源。
+  var t = topThreat();
+  lastDirectorReport = { focus: t, modifiers: [], source: 'local', model: '',
+    reason: t ? '本地规则：按上一城最多技能重建' : '本地规则：上一城没有破坏记录，按默认规则重建' };
+  rebuild((currentSeed * 1664525 + 1013904223) >>> 0, t);
+  window.__lastThreat = t;
+  $('director').textContent = prefix + (t ? '按上一城最多技能「' + t + '」重建新城。' : '上一城没有破坏记录，按默认规则重建新城。');
+}
+/* ================= issue147 自动导演 =================
+ * 每局结束（frame 里 roundFinished 置 true 处）自动把本局摘要发给同源 /api/director：
+ * 只含技能次数与胜负类别，不含坐标、人名等细节；模型只选 focus，几何由客户端生成。
+ * file:// 没有同源服务，不发请求，只提示用 scripts/director_server.py 启动。
+ * 夜间候选（initIntegration 里置 roundFinished）不触发自动导演，避免绕过候选决策流程。 */
+var directorRound = 0;        // 世界代号：每次 rebuild 递增，用于丢弃过期响应
+var directorAutoDone = false; // 每局只自动触发一次，rebuild 时重置
+var directorBusy = false;     // 是否有请求在途
+var directorPending = null;   // 最近一次失败的摘要，供 #retryDirector 重试
+function directorHttp() { return location.protocol === 'http:' || location.protocol === 'https:'; }
+function directorIdleText() {
+  return directorHttp() ? '一局结束后，本机导演会根据你的破坏记录演化世界。'
+    : '当前以 file:// 打开，自动演化不可用：请用 python scripts/director_server.py --html <本文件> 启动，再访问 http://127.0.0.1:8765/。';
+}
+function directorOutcome() {
+  // verdictText 由 roundResult 生成，按前缀提取胜负类别
+  if (verdictText.indexOf('善胜利') === 0) return '善胜利';
+  if (verdictText.indexOf('恶胜利') === 0) return '恶胜利';
+  if (verdictText.indexOf('失败') === 0) return '失败';
+  return '未达成胜利条件';
+}
+function directorPayload() {
+  var counts = {}, skills = [], i, k;
+  for (i = 0; i < threatLog.length; i++) {
+    k = threatLog[i];
+    if (!Object.prototype.hasOwnProperty.call(SKILLS, k)) continue; // 只上报服务端认识的技能
+    counts[k] = Math.min(1000, (counts[k] || 0) + 1); // 与服务端单技能计数上限一致
+  }
+  for (k in counts) skills.push({ kind: k, count: counts[k] });
+  return { skills: skills, outcome: directorOutcome() };
+}
+function directorFail(msg, payload) {
+  directorPending = payload;
+  $('director').textContent = '导演：世界演化失败——' + msg + '。可重试，或用本地规则换世界（本地模拟，非后端生成）。';
+  $('retryDirector').hidden = false;
+  $('directorLocal').hidden = false; // issue147 收尾：502/504 等失败时给出本地兜底入口
+}
+function persistDirectorWorld() {
+  // 复用「保存」按钮的 checkpoint 通道持久化新世界；若此处失败，新世界仅留在内存，
+  // 刷新后会回到旧 accepted（缺口：持久化失败不自动重试，需玩家手动点「保存」）。
+  if (typeof controller === 'undefined' || !controller || !editGuard(true)) return;
+  guardedTask(async function () {
+    var e = controller.getEnvelope();
+    await controller.dispatch({ type: 'checkpoint', commandId: 'director-' + (e.revision + 1), expectedRevision: e.revision, state: captureLocalWorld() });
+    notice('导演新世界已保存 checkpoint');
+  });
+}
+var MODIFIER_ZH = { guard_reinforce: '守卫增援', wall_reinforce: '城墙加固', civilian_shelter_routine: '百姓夜宿避难所', market_move: '市集迁址', patrol_dense: '巡逻加密' };
+function modifierZh(m) { return MODIFIER_ZH[m] || m; }
+/* D12/AC-17：v2 threat 串导入校验——前缀格式/focus∈技能∪{''}/mods 白名单+排序去重（parseDirectorThreat），
+   长度≤160 由既有布局参数检查兜底；v1 旧串走冻结路径不新增限制（D14）。 */
+function directorThreatValid(threat) {
+  if (typeof threat !== 'string' || threat.indexOf('director-v2:') !== 0) return true;
+  var d = parseDirectorThreat(threat);
+  return !!d && (d.focus === '' || Object.prototype.hasOwnProperty.call(SKILLS, d.focus));
+}
+function directorSuccess(data, payload, round) {
+  if (round !== directorRound) return; // 等待期间世界已被手动重建，丢弃过期结果
+  var focus = data && typeof data.focus === 'string' ? data.focus : null;
+  var reason = data && typeof data.reason === 'string' && data.reason ? data.reason : '';
+  var mods = data ? data.modifiers : null;
+  // 客户端只信规范化串，但仍按不可信输入复核白名单/去重（D6）；reason 一律 textContent 渲染（D13）。
+  var modsOk = Array.isArray(mods) && mods.length <= DIRECTOR_MODIFIERS.length &&
+    mods.every(function (m) { return typeof m === 'string' && DIRECTOR_MODIFIERS.indexOf(m) !== -1; }) &&
+    new Set(mods).size === mods.length;
+  var known = focus !== null && (focus === '' ? payload.skills.length === 0
+    : payload.skills.some(function (s) { return s.kind === focus; }));
+  if (!known || !reason || !modsOk) { directorFail('模型响应无效', payload); return; }
+  if (worldEditBlocked()) { directorFail('候选待决或保存进行中，世界已锁定', payload); return; }
+  var threat = directorThreatString(focus, mods); // D2 耦合点：生成处统一走 v2 编码
+  if (threat.length > 160) { directorFail('模型响应无效', payload); return; } // AC-18 长度兜底
+  lastDirectorReport = { focus: focus, modifiers: mods.slice().sort(), reason: reason, model: data.model || '未知', source: 'backend' };
+  rebuild((currentSeed * 1664525 + 1013904223) >>> 0, threat);
+  $('director').textContent = '导演：' + (focus ? '关注「' + focus + '」，' : '上一城没有破坏记录，') + reason +
+    (mods.length ? ' 适应：' + mods.slice().sort().map(modifierZh).join('、') + '。' : '') +
+    '（模型 ' + (data.model || '未知') + '）';
+  persistDirectorWorld();
+}
+function sendDirector(payload) {
+  if (directorBusy) return;
+  if (worldEditBlocked()) { directorFail('候选待决或保存进行中，世界已锁定', payload); return; }
+  directorBusy = true;
+  var round = directorRound;
+  $('retryDirector').hidden = true;
+  $('directorLocal').hidden = true;
+  $('director').textContent = '导演：正在根据本局破坏记录生成下一城……';
+  fetch('/api/director', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    .then(function (resp) {
+      return resp.json().catch(function () { return null; }).then(function (data) {
+        if (!resp.ok) throw Error((data && data.error) || ('HTTP ' + resp.status));
+        return data;
+      });
+    })
+    .then(function (data) { directorBusy = false; directorSuccess(data, payload, round); })
+    .catch(function (err) {
+      directorBusy = false;
+      if (round === directorRound) directorFail(err && err.message ? err.message : '网络错误', payload);
+    });
+}
+function autoDirector() {
+  if (directorAutoDone) return; // 每局只自动触发一次；失败后走手动重试
+  directorAutoDone = true;
+  if (!directorHttp()) {
+    $('director').textContent = '本局已结束。file:// 下不会请求导演服务：请用 python scripts/director_server.py --html <本文件> 启动，再通过 http://127.0.0.1:8765/ 打开；也可点下方按钮用本地规则换世界（本地模拟，非后端生成）。';
+    $('directorLocal').hidden = false; // issue147 收尾：file:// 局末的本地兜底入口
+    return;
+  }
+  sendDirector(directorPayload());
+}
+/* ================= issue147-adapt N2：破坏画像面板 + 施放范围预览 =================
+ * 预览只显示范围几何（目标点+半径环），不显示命中数、不分角色、不标必杀（D13）：
+ * 夜间命中数会泄露睡眠规则刻意隐藏的位置，命中数直给会压缩结局多样性。
+ * skillTargets 只读 dry-run，不复用 mutating 的 affectNear，不改 census/combat/toppled/hash（AC-20）。
+ * 面板 reason/modifiers 一律 textContent 渲染，模型输出按不可信文本处理（AC-19）。 */
+var lastDirectorReport = null; // 上轮导演结果（backend/local），跨 rebuild 保留供画像面板显示
+var previewGroup = null;
+var lastPreviewT = 0;
+function renderAdaptPanel() {
+  var counts = {}, parts = [], i, k;
+  for (i = 0; i < threatLog.length; i++) { k = threatLog[i]; counts[k] = (counts[k] || 0) + 1; }
+  for (k in counts) parts.push(k + '×' + counts[k]);
+  var outcome = verdictText ? verdictText.split('：')[0] : '未结算';
+  $('adaptRound').textContent = '本局技能：' + (parts.length ? parts.join('、') : '无') + ' · 胜负：' + outcome;
+  var r = lastDirectorReport;
+  $('adaptLast').textContent = r
+    ? '上轮导演（' + (r.source === 'local' ? '本地模拟，非后端生成' : '模型 ' + r.model) + '）：' +
+      (r.focus ? '关注「' + r.focus + '」' : '无破坏记录') +
+      (r.modifiers.length ? ' · 适应：' + r.modifiers.map(modifierZh).join('、') : ' · 无适应') +
+      ' · ' + r.reason
+    : '上轮导演：暂无记录（一局结束后自动记录）';
+}
+function clearCastPreview() {
+  if (!previewGroup) return;
+  scene.remove(previewGroup);
+  previewGroup.traverse(function (o) { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+  previewGroup = null;
+}
+function renderCastPreview() {
+  clearCastPreview();
+  var kind = $('disaster').value, spec = SKILLS[kind];
+  if (!spec || roundFinished) { $('castPreview').textContent = ''; return; }
+  var targets = skillTargets(spec); // 只读 dry-run：仅读 world.plans / toppled
+  var pts = targets.map(function (t) { return { x: t.x, z: t.z, r: spec.radius || 0 }; });
+  if (spec.quake) pts = [{ x: 0, z: 0, r: 20 }]; // 地震全城：示意环（仅视觉，不计命中）
+  if (!pts.length) { $('castPreview').textContent = '目标预览：当前没有可作用的目标'; return; }
+  previewGroup = new THREE.Group();
+  pts.forEach(function (p) {
+    var r = Math.max(p.r, 1.2);
+    var m = new THREE.Mesh(new THREE.RingGeometry(Math.max(0.1, r - 0.18), r, 40),
+      new THREE.MeshBasicMaterial({ color: 0xf2cd37, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false }));
+    m.rotation.x = -Math.PI / 2; m.position.set(p.x, 0.08, p.z);
+    previewGroup.add(m);
+  });
+  scene.add(previewGroup);
+  $('castPreview').textContent = '目标预览：' + (targets.length ? targets.map(function (t) { return t.id; }).join('、') : '全城') + ' · 范围环已显示（不提供命中数）';
+}
 function rebuild(seed, threat) {
   if (typeof controller !== "undefined" && controller && worldEditBlocked()) return;
+  rebuildInternal(seed, threat);
+  lockTime = false; $('lockTime').checked = false;
+}
+function layoutHash(w, threat) {
+  return IntegrationSHA(NightEvents.canonical({seed:w.seed, threat:threat, plans:w.plans, roads:w.roads, props:w.props}));
+}
+function generatedWorld(seed, threat) {
+  var w = buildWorld(seed, threat);
+  w.layoutThreat = threat;
+  w.layoutHash = layoutHash(w, threat);
+  return w;
+}
+function legacyWorld(seed, plans, savedWorld) {
+  var choices = ['', '陨石', '洪水', '大火'];
+  for (var i = 0; i < choices.length; i++) {
+    var w = buildWorld(seed, choices[i]);
+    if ((!plans || NightEvents.canonical(plans) === NightEvents.canonical(w.plans)) &&
+        (!savedWorld || NightEvents.canonical(savedWorld) === NightEvents.canonical(w))) return w;
+  }
+  throw Error('无法确定旧档布局');
+}
+function validateGeneratedState(s) {
+  var w = s.world, hasThreat = Object.prototype.hasOwnProperty.call(w, 'layoutThreat'),
+    hasHash = Object.prototype.hasOwnProperty.call(w, 'layoutHash'), expected;
+  if (hasThreat !== hasHash) throw Error('布局参数不完整');
+  if (hasThreat) {
+    if (typeof w.layoutThreat !== 'string' || w.layoutThreat.length > 160 ||
+        typeof w.layoutHash !== 'string' || !/^[0-9a-f]{64}$/.test(w.layoutHash)) throw Error('布局参数非法');
+    if (!directorThreatValid(w.layoutThreat)) throw Error('布局参数非法'); // D12：v2 串格式/白名单/排序校验
+    expected = generatedWorld(s.currentSeed, w.layoutThreat);
+    if (NightEvents.canonical(w) !== NightEvents.canonical(expected)) throw Error('世界生成不一致');
+  } else expected = legacyWorld(s.currentSeed, w.plans, w);
+  if (NightEvents.canonical(s.census) !== NightEvents.canonical(makeCensus(s.currentSeed, expected))) throw Error('花名册生成不一致');
+}
+function rebuildInternal(seed, threat, savedWorld, savedCensus) {
+  clearSkillEffects();
   currentSeed = seed >>> 0;
-  world = buildWorld(currentSeed, threat);
-  census = makeCensus(currentSeed, world);
+  toppled = {};
+  $('topple').textContent = '推倒北墙'; $('god').textContent = '破坏神'; window.__toppled = 0;
+  world = savedWorld ? CandidateCore.clone(savedWorld) : generatedWorld(currentSeed, threat || '');
+  if (savedWorld && typeof savedWorld.layoutThreat === 'string') threat = savedWorld.layoutThreat;
+  census = savedCensus ? CandidateCore.clone(savedCensus) : makeCensus(currentSeed, world);
   agents = census.map(function (c) {
     var hp = posOf(world, c.home);
     // 落雷砍高处，人起手留在低处。火灾从城中心往外烧，人再往外离开被烧的那一处。
     // 其余不改布局的种类仍向东 6。旱灾、蝗灾、瘟疫、山贼还没有自己的躲法。
     var dx = 0;
-    if (threat === '\u843d\u96f7') dx = 0;
+    if (parseDirectorThreat(threat)) dx = 0; // D2 耦合点：v1/v2 统一解析，导演世界起手留在低处
+    else if (threat === '\u843d\u96f7') dx = 0;
     else if (threat === '\u706b\u707e') { dx = hp.x > 0 ? 4 : -4; }
     else if (threat && threat !== '\u9668\u77f3' && threat !== '\u6d2a\u6c34' && threat !== '\u5927\u706b') dx = 6;
     return { id: c.id, role: c.role, name: c.name, age: c.age, home: c.home, work: c.work, shift: c.shift,
       x: hp.x + dx, z: hp.z, heading: 0, segIdx: -1, visible: false, slot: 0, faction: 'folk' };
   });
-  dayPlans = {};
+  dayPlans = {}; scheduleOverrides = {}; threatLog = [];
   builds = []; buildOps = []; buildSeq = 0;
   planOverrides = {}; patchAudit = []; roleTint = {};
   window.__wuxiaPatches = 0;
@@ -3424,11 +4055,19 @@ function rebuild(seed, threat) {
   try { history.replaceState(null, '', '?seed=' + currentSeed); } catch (err) { /* file:// 下部分浏览器拒绝改 URL，忽略 */ }
   $('stampSeed').textContent = currentSeed;
   $('stampB').textContent = world.plans.length;
-  totalMin = 1080; day = 1; simMinute = 1080;
+  totalMin = 0; day = 1; simMinute = 0;
+  rebellionOccurred = false; rebellionWaves = {}; roundFinished = false; verdictText = ''; verdictDay = 0; verdictClock = totalMin; quakeUntil = 0; outsiderSent = false;
+  // issue147：新世界即新一局，重置自动导演的单次触发与重试状态
+  directorRound++; directorAutoDone = false; directorBusy = false; directorPending = null;
+  $('retryDirector').hidden = true;
+  $('directorLocal').hidden = true;
+  $('director').textContent = directorIdleText();
+  renderVerdict();
+  clearCastPreview(); renderAdaptPanel(); renderCastPreview(); // issue147-adapt N2：新世界刷新画像与预览
 }
 function exportSnapshot() {
-  var saved = captureAccepted(); restoreAccepted(saved);
-  var snap = { version: 1, seed: currentSeed, day: day, minute: Math.floor(simMinute), plans: world.plans, builds: builds, buildOps: buildOps, planOverrides: planOverrides, roleTint: roleTint, patchAudit: patchAudit };
+  var snap = { version: 1, seed: currentSeed, day: day, minute: Math.floor(simMinute), plans: world.plans, builds: builds, buildOps: buildOps, planOverrides: planOverrides, roleTint: roleTint, patchAudit: patchAudit, scheduleOverrides: scheduleOverrides, combat: captureCombat(), scene: captureScene() };
+  if (Object.prototype.hasOwnProperty.call(world, 'layoutThreat')) { snap.layoutThreat = world.layoutThreat; snap.layoutHash = world.layoutHash; }
   var blob = new Blob([JSON.stringify(snap, null, 1)], { type: 'application/json' });
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -3436,83 +4075,79 @@ function exportSnapshot() {
   a.click();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
 }
+function prepareSnapshot(snap) {
+  function need(ok, field) { if (!ok) throw Error('快照字段非法：' + field); }
+  function obj(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
+  function opt(key, fallback, valid) { var v = snap[key] === undefined ? fallback : snap[key]; need(valid(v), key); return v; }
+  need(obj(snap) && snap.version === 1, 'version');
+  need(Number.isSafeInteger(snap.seed) && snap.seed >= 0 && snap.seed <= 0xffffffff, 'seed');
+  need(Number.isSafeInteger(snap.day) && snap.day >= 1, 'day');
+  need(Number.isInteger(snap.minute) && snap.minute >= 0 && snap.minute < 1440, 'minute');
+  var total = (snap.day - 1) * 1440 + snap.minute;
+  need(Number.isSafeInteger(total), 'day/minute');
+  var hasThreat = Object.prototype.hasOwnProperty.call(snap, 'layoutThreat'), hasHash = Object.prototype.hasOwnProperty.call(snap, 'layoutHash');
+  need(hasThreat === hasHash, 'layoutThreat/layoutHash');
+  var w;
+  if (hasThreat) {
+    need(typeof snap.layoutThreat === 'string' && snap.layoutThreat.length <= 160, 'layoutThreat');
+    need(directorThreatValid(snap.layoutThreat), 'layoutThreat'); // D12/AC-17：畸形 v2 串拒且不改现场
+    need(typeof snap.layoutHash === 'string' && /^[0-9a-f]{64}$/.test(snap.layoutHash), 'layoutHash');
+    w = generatedWorld(snap.seed, snap.layoutThreat);
+    need(snap.layoutHash === w.layoutHash && Array.isArray(snap.plans), 'layoutHash/plans');
+  } else w = legacyWorld(snap.seed, snap.plans, null);
+  var c = makeCensus(snap.seed, w);
+  need(snap.plans === undefined || NightEvents.canonical(snap.plans) === NightEvents.canonical(w.plans), 'plans');
+  var bs = opt('builds', [], Array.isArray), ops = opt('buildOps', [], Array.isArray);
+  var po = opt('planOverrides', {}, obj), rt = opt('roleTint', {}, obj);
+  var audit = opt('patchAudit', [], Array.isArray), schedules = opt('scheduleOverrides', {}, obj);
+  var ids = new Set(), coords = new Set(), maxId = 0;
+  function blockId(id) {
+    need(typeof id === 'string' && /^blk-\d+$/.test(id), 'block.id');
+    var n = Number(id.slice(4)); need(Number.isSafeInteger(n) && n > 0 && n < Number.MAX_SAFE_INTEGER, 'block.id');
+    maxId = Math.max(maxId, n); return n;
+  }
+  need(bs.length <= MAX_BUILDS, 'builds');
+  bs.forEach(function(b) {
+    need(obj(b) && acceptImportedBuild(b) && !blockHitsPlan(w, b.x, b.y, b.z), 'build');
+    var n = blockId(b.id), key = [b.x, b.y, b.z].join(',');
+    need(!ids.has(n) && !coords.has(key), 'build.id/position'); ids.add(n); coords.add(key);
+  });
+  ops.forEach(function(o, i) {
+    need(obj(o) && o.seq === i + 1 && ['place','remove','undo'].includes(o.op), 'buildOps');
+    if (o.op === 'undo') { need(Number.isSafeInteger(o.ref) && o.ref > 0 && o.ref < o.seq, 'buildOps.ref'); if (o.id !== undefined) blockId(o.id); }
+    else { blockId(o.id); need(acceptImportedBuild(o), 'buildOps.block'); }
+  });
+  Object.keys(po).forEach(function(id) {
+    var p = w.plans.find(function(x) { return x.id === id; }), changes = po[id];
+    need(p && obj(changes), 'planOverrides');
+    Object.keys(changes).forEach(function(f) {
+      var spec = Object.prototype.hasOwnProperty.call(PATCH_FIELDS, f) && PATCH_FIELDS[f], v = changes[f];
+      need(spec && Number.isFinite(v) && v >= spec.min && v <= spec.max && (!spec.int || Number.isInteger(v)) && (f !== 'floors' || p.kind === 'pagoda'), 'planOverrides.' + f);
+    });
+  });
+  Object.keys(rt).forEach(function(id) { need(c.some(function(a) { return a.id === id; }) && Number.isInteger(rt[id]) && rt[id] >= 0 && rt[id] <= 0xffffff, 'roleTint'); });
+  audit.forEach(function(a, i) {
+    need(obj(a) && a.seq === i + 1 && ['patch','undo'].includes(a.op) && typeof a.target === 'string' &&
+      (Object.prototype.hasOwnProperty.call(PATCH_FIELDS, a.field) || a.field === 'hat') && Number.isFinite(a.old) && Number.isFinite(a.new), 'patchAudit');
+    need(a.field === 'hat' ? c.some(function(x) { return x.id === a.target; }) : w.plans.some(function(x) { return x.id === a.target; }), 'patchAudit.target');
+    if (a.op === 'undo') need(Number.isSafeInteger(a.ref) && a.ref > 0 && a.ref < a.seq, 'patchAudit.ref');
+  });
+  var state = { currentSeed:snap.seed, world:w, census:c, builds:bs, buildOps:ops, buildSeq:maxId,
+    planOverrides:po, roleTint:rt, patchAudit:audit, totalMin:total, day:snap.day, simMinute:snap.minute, scheduleOverrides:schedules };
+  if (snap.combat !== undefined) { CandidateCore.combatCheck(snap.combat, c); state.combat = snap.combat; }
+  if (snap.scene !== undefined) { CandidateCore.sceneCheck(snap.scene, w); state.scene = snap.scene; }
+  night.validateOverrides(state, buildDay);
+  return CandidateCore.clone(state);
+}
 function importSnapshot(file) {
-  if (!editGuard()) return;
+  if (!editGuard(true)) return;
   var rd = new FileReader();
   rd.onload = function () {
+    if (!editGuard(true)) return;
     try {
-      var snap = JSON.parse(String(rd.result));
-      if (snap.version !== 1) { window.alert('快照版本不匹配（需要 version=1），拒绝导入。'); return; }
-      if (!Number.isInteger(snap.seed)) { window.alert('快照 seed 必须是整数，拒绝导入。'); return; }
-      if (Array.isArray(snap.plans) && JSON.stringify(snap.plans) !== JSON.stringify(buildWorld(snap.seed >>> 0).plans)) {
-        window.alert('快照图纸与种子派生结果不一致（契约 §3.5：图纸由种子唯一决定），拒绝导入。');
-        return;
-      }
-      rebuild(snap.seed >>> 0);
-      if (Array.isArray(snap.builds)) {
-        var seen = {}, maxId = 0;
-        builds = snap.builds.filter(function (b) {
-          if (!acceptImportedBuild(b)) return false;
-          if (blockHitsPlan(world, b.x, b.y, b.z)) return false;
-          var k = b.x + ',' + b.y + ',' + b.z;
-          if (seen[k]) return false;
-          seen[k] = 1;
-          var n = parseInt(String(b.id || '').replace('blk-', ''), 10);
-          if (n > maxId) maxId = n;
-          return true;
-        }).slice(0, MAX_BUILDS).map(function (b, i) {
-          return { id: /^blk-\d+$/.test(b.id || '') ? b.id : blkId(i + 1), x: b.x, y: b.y, z: b.z, type: b.type };
-        });
-        buildSeq = Math.max(maxId, builds.length);
-        rebuildBlocks();
-      }
-      if (Array.isArray(snap.buildOps)) buildOps = snap.buildOps.filter(function (o) {
-        if (!o || (o.op !== 'place' && o.op !== 'remove' && o.op !== 'undo')) return false;
-        if (typeof o.seq !== 'number' || !isFinite(o.seq)) return false;
-        if (o.op === 'undo') return typeof o.ref === 'number' && isFinite(o.ref);
-        if (!/^blk-\d+$/.test(o.id || '')) return false;
-        if (typeof o.x !== 'number' || typeof o.y !== 'number' || typeof o.z !== 'number') return false;
-        if (!isFinite(o.x) || !isFinite(o.y) || !isFinite(o.z)) return false;
-        if (o.y < 0.5 || o.y > 7.5 || Math.abs(o.x) > WORLD_HALF - 2 || Math.abs(o.z) > WORLD_HALF - 2) return false;
-        return acceptBuildType(o.type);
-      });
-      if (snap.planOverrides && typeof snap.planOverrides === 'object') {
-        planOverrides = {};
-        for (var oid in snap.planOverrides) {
-          var oo = snap.planOverrides[oid], bp = null, bi;
-          for (bi = 0; bi < world.plans.length; bi++) if (world.plans[bi].id === oid) bp = world.plans[bi];
-          if (!bp || !oo || typeof oo !== 'object') continue;
-          for (var of in oo) {
-            var sp = PATCH_FIELDS[of], v = oo[of];
-            if (!sp || typeof v !== 'number' || !isFinite(v) || v < sp.min || v > sp.max) continue;
-            if (sp.int && v !== Math.floor(v)) continue;
-            if (of === 'floors' && bp.kind !== 'pagoda') continue;
-            if (!planOverrides[oid]) planOverrides[oid] = {};
-            planOverrides[oid][of] = sp.int ? Math.floor(v) : v;
-          }
-        }
-      }
-      if (snap.roleTint && typeof snap.roleTint === 'object') {
-        roleTint = {};
-        for (var rid in snap.roleTint) {
-          var rv = snap.roleTint[rid], rfound = false, ci;
-          if (typeof rv !== 'number' || !isFinite(rv) || rv < 0 || rv > 0xffffff) continue;
-          for (ci = 0; ci < census.length; ci++) if (census[ci].id === rid) { rfound = true; break; }
-          if (!rfound) continue;
-          roleTint[rid] = rv >>> 0;
-        }
-        window.__wuxiaRoleTint = roleTint;
-      }
-      if (Array.isArray(snap.patchAudit)) patchAudit = snap.patchAudit.filter(function (a) {
-        if (!a || (a.op !== 'patch' && a.op !== 'undo')) return false;
-        if (typeof a.seq !== 'number' || typeof a.target !== 'string' || (!PATCH_FIELDS[a.field] && a.field !== 'hat')) return false;
-        if (a.op === 'patch' && (typeof a.old !== 'number' || typeof a.new !== 'number')) return false;
-        return true;
-      });
-      repatch();
-      day = Math.max(1, snap.day | 0);
-      var minute = (typeof snap.minute === 'number' && snap.minute >= 0 && snap.minute < 1440) ? snap.minute : 600;
-      totalMin = (day - 1) * 1440 + minute; simMinute = minute;
+      var prepared = prepareSnapshot(JSON.parse(String(rd.result)));
+      restoreAccepted(prepared);
+
     } catch (err) { window.alert('快照解析失败：' + err.message); }
   };
   rd.readAsText(file);
@@ -3586,21 +4221,107 @@ function undoPatch() {
 /* ================= RENDER §14 主循环 ================= */
 var last = 0, sliderActive = false, fpsAcc = 0, fpsN = 0, fpsT = 0, visibleCount = 0;
 var frameOn = true;
+var guardMarks = [], guardMarkOn = true;
+function updateRebelHud() {
+  var el = $('rebel'), joined = 0, guards = 0, standing = 0;
+  for (var i = 0; i < agents.length; i++) {
+    var a = agents[i];
+    if ((a.role === 'wanderer' || a.faction === 'wuxia') && a.role !== 'guard' && !a.dead && !a.downed) joined++;
+    if (a.role === 'guard') { guards++; if (!a.dead && !a.downed) standing++; }
+  }
+  el.hidden = !rebellionOccurred;
+  el.textContent = rebellionOccurred ? '武侠已反抗：' + joined + ' 人 · 守卫剩 ' + standing + '/' + guards : '';
+}
+function initGuardMarks() {
+  for (var i = 0; i < 50; i++) { // issue147-guardmark：48→50，增援局 census 守卫 40+10=50（GUARD_REINFORCE_N），全可见时不漏徽章
+    var d = document.createElement('div'); d.className = 'gmark'; d.textContent = '卫';
+    $('labels').appendChild(d); guardMarks.push(d);
+  }
+  $('markGuards').addEventListener('change', function () { guardMarkOn = this.checked; updateGuardMarks(); });
+}
+function updateGuardMarks() {
+  var used = 0;
+  if (guardMarkOn) for (var i = 0; i < agents.length && used < guardMarks.length; i++) {
+    var a = agents[i];
+    if (a.role !== 'guard' || a.dead || a.downed || !a.visible) continue;
+    var p = project(a.x, 1.95, a.z); // 1.95＝帽顶上方常量口径（投扔无弧线物理、a.y 恒 0，不加死参数）
+    if (!p || p.x < 0 || p.y < 0 || p.x > innerWidth || p.y > innerHeight) continue;
+    var d = guardMarks[used++];
+    if (d.style.display !== 'block') d.style.display = 'block';
+    // issue147-guardmark：位置走复合 translate3d（left/top 恒 0，见 .gmark；translate(-50%,-100%) 居中不可丢，锚点＝底边中点），
+    // 避免每帧 left/top 触发 layout。缓存比较对象＝上次写入值（非上次计算值，防慢运动无界漂移）；差 <0.3px 不写；
+    // 紧凑填充换人（死亡/出视口使后续 slot 换人）按 agent 身份强制写；坐标不整数化。
+    if (d._ga !== a || d._gx === undefined || Math.abs(p.x - d._gx) >= 0.3 || Math.abs(p.y - d._gy) >= 0.3) {
+      d.style.transform = 'translate3d(' + p.x + 'px,' + p.y + 'px,0) translate(-50%,-100%)';
+      d._gx = p.x; d._gy = p.y;
+    }
+    d._ga = a;
+  }
+  for (var j = used; j < guardMarks.length; j++) if (guardMarks[j].style.display !== 'none') guardMarks[j].style.display = 'none';
+  window.__guardMarksShown = used;
+}
+// issue147-guardmark 测试钩子 H1（纯读不写；仅供 tester 外部调用，不在帧循环内）：
+// shown＝最近一次更新计数，pool＝池容量；marks 按池序（＝DOM 序），id＝slot→agent 配对，
+// x/y/w/h＝实际渲染盒（getBoundingClientRect 数值化），anchor＝当帧写入的 project 值（屏幕 px，y 向下）。
+// 渲染锚点＝(x+w/2, y+h)；与 anchor 之差＝写入量化（≤0.3px）；与 H2 实时重算之差＝跟随滞后。
+window.__guardMarkRects = function () {
+  var marks = [];
+  for (var i = 0; i < guardMarks.length; i++) {
+    var d = guardMarks[i];
+    if (d.style.display !== 'block' || !d._ga) continue;
+    var r = d.getBoundingClientRect();
+    marks.push({ id: d._ga.id, x: r.left, y: r.top, w: r.width, h: r.height,
+      anchor: { x: d._gx, y: d._gy } });
+  }
+  return { shown: window.__guardMarksShown, pool: guardMarks.length, marks: marks };
+};
+// issue147-guardmark 测试钩子 H2（纯读）：全体守卫渲染期状态（visible 为渲染期标志，capture 不含）
+// ＋原 project 暴露，供 tester 独立重算期望锚点 project(x, 1.95, z)。
+window.__guardState = function () {
+  var out = [];
+  for (var i = 0; i < agents.length; i++) {
+    var a = agents[i];
+    if (a.role !== 'guard') continue;
+    out.push({ id: a.id, x: a.x, y: a.y || 0, z: a.z, dead: !!a.dead, downed: !!a.downed,
+      visible: !!a.visible, flying: !!a.flying });
+  }
+  return out;
+};
+window.__project = project;
+function guideIsOpen() { return $('guide').style.display === 'block'; }
+function initGuide() {
+  var guide = $('guide'), seen = false;
+  try { seen = localStorage.getItem('wuxia-guide-v1') === '1'; } catch (_) {}
+  if (!seen) guide.style.display = 'block';
+  $('guideOk').addEventListener('click', function () {
+    guide.style.display = 'none';
+    try { localStorage.setItem('wuxia-guide-v1', '1'); } catch (_) {}
+  });
+  $('guideAgain').addEventListener('click', function () { guide.style.display = 'block'; });
+}
 function frame(now) {
   if (!frameOn) return;
   requestAnimationFrame(frame);
+  if (fxFrozen) { last = 0; renderer.render(scene, camera); return; }
   if (!last) last = now;
   var rawDt = (now - last) / 1000;
   var dt = Math.min(0.05, rawDt);
   last = now;
   var t = now / 1000;
-  if (!sliderActive && !lockTime && !worldEditBlocked()) {
-    totalMin += dt * speed / SECONDS_PER_SIM_MINUTE;
+  if (!sliderActive && !lockTime && !worldEditBlocked() && !guideIsOpen() && !roundFinished && !document.hidden) {
+    var boundary = (Math.floor(totalMin / MINUTES_PER_DAY) + 1) * MINUTES_PER_DAY;
+    totalMin = Math.min(boundary, totalMin + rawDt * speed * MINUTES_PER_DAY / realDaySeconds);
     day = 1 + Math.floor(totalMin / MINUTES_PER_DAY);
     simMinute = totalMin % MINUTES_PER_DAY;
+    if (totalMin === boundary) {
+      dayVerdict(); roundFinished = true; lockTime = true; $('lockTime').checked = true;
+      renderVerdict(); // issue147 收尾：roundFinished 置位后刷新面板，露出「下一局」
+      autoDirector(); // issue147：每局结束自动触发一次（file:// 下仅提示，不发请求）
+    }
   }
-  clockOut.textContent = fmt(simMinute) + ' ' + shichen(simMinute);
+  clockOut.textContent = roundFinished ? '24:00 本局结束' : fmt(simMinute) + ' ' + shichen(simMinute);
   minuteSlider.value = String(Math.floor(simMinute));
+  if (t - lastPreviewT > 1.5) { lastPreviewT = t; if (!roundFinished && !guideIsOpen()) renderCastPreview(); } // N2：代理移动后范围环跟随目标
   if (!settled) {
     fallT += rawDt; /* 落块时间线走真实秒：低帧率下不被 dt clamp 拉长（否则闸门等待期内零件悬空） */
     applyFalls();
@@ -3610,12 +4331,16 @@ function frame(now) {
   window.__wuxiaStudVis = studMesh.visible;
   if (assetGroup) { assetGroup.visible = (mode === 'lego') && settled; window.__wuxiaAssetVis = assetGroup.visible; }
   barFill.style.width = (settled ? 100 : Math.min(100, fallT / (maxT1 + 0.4) * 100)) + '%';
-  updateRings(dt);
+  updateRings(dt); updateSkillEffects(rawDt);
+  var quakeX = now < quakeUntil ? 'translateX(' + (Math.sin(now / 55) * 5).toFixed(1) + 'px)' : '';
+  stage.style.transform = quakeX;
+  labels.style.transform = quakeX; // issue147-guardmark quake 方案B：#labels 与 #stage 为 body 兄弟、子元素全世界锚定，同串同帧镜像使徽章/标签与画布同抖
   visibleCount = updateAgents(dt, t);
   updateCamera(dt);
   applyTime(simMinute, t);
   updateLabels(t);
   renderer.render(scene, camera);
+  updateGuardMarks(); // issue147-guardmark：render 之后相机矩阵已更新，徽章与守卫同帧贴合（原挂 0.5s 分支＝2Hz）
   window.__wuxiaCalls = renderer.info.render.calls;
   window.__wuxiaTri = renderer.info.render.triangles;
   window.__wuxiaSettled = settled;
@@ -3629,10 +4354,17 @@ function frame(now) {
     window.__wuxiaMem = renderer.info.memory.geometries;
     window.__wuxiaCamR = Math.round(cam.radius);
     $('stampA').textContent = visibleCount + '/' + census.length;
+    updateRebelHud();
     fpsAcc = 0; fpsN = 0; fpsT = t;
   }
 }
 /* ================= RENDER §15 交互绑定与启动 ================= */
+document.addEventListener('visibilitychange', function () { last = 0; });
+$('dayDuration').addEventListener('change', function () {
+  if (!editGuard()) { this.value = String(realDaySeconds); return; }
+  var value = Number(this.value);
+  if ([60, 180, 900].indexOf(value) !== -1) realDaySeconds = value;
+});
 minuteSlider.addEventListener('pointerdown', function () { sliderActive = true; });
 window.addEventListener('pointerup', function () { sliderActive = false; });
 minuteSlider.addEventListener('input', function () {
@@ -3651,7 +4383,26 @@ $('rebuild').addEventListener('click', function () {
   var v = parseInt(seedInput.value, 10);
   rebuild(isFinite(v) ? v >>> 0 : 20260818);
 });
-$('reroll').addEventListener('click', function () { rebuild((currentSeed * 1664525 + 1013904223) >>> 0); });
+$('reroll').addEventListener('click', function () {
+  if (!editGuard(true)) return;
+  var t = topThreat(); threatLog = [];
+  rebuild((currentSeed * 1664525 + 1013904223) >>> 0, t);
+  window.__lastThreat = t;
+  $('director').textContent = t ? '导演：上一城记录「' + t + '」，新城按该记录生成。' : '导演：上一城没有破坏记录。';
+});
+$('retryDirector').addEventListener('click', function () {
+  // issue147：自动演化失败后的手动重试，仍只在本局结束且世界未变时有效
+  if (!roundFinished || !directorPending) { this.hidden = true; return; }
+  sendDirector(directorPending);
+});
+$('directorLocal').addEventListener('click', function () {
+  // issue147 收尾：自动导演失败（502/504 等）或 file:// 时的本地兜底；
+  // 用 topThreat 裸技能重建，提示明确标注「本地模拟，非后端生成」，不冒充后端结果。
+  if (!roundFinished) { this.hidden = true; return; }
+  if (!editGuard(true)) return;
+  localRuleRebuild('导演（本地模拟，非后端生成）：');
+  persistDirectorWorld();
+});
 $('modeClay').addEventListener('click', function () { setMode('clay'); });
 $('modeLego').addEventListener('click', function () { setMode('lego'); });
 $('fpToggle').addEventListener('click', function () { setFP(!fpMode); });
@@ -3669,6 +4420,7 @@ $('licOk').addEventListener('click', function () {
   $('license').style.display = 'none';
 });
 $('buildToggle').addEventListener('click', function () {
+  if (!editGuard()) return;
   buildMode = !buildMode;
   this.classList.toggle('on', buildMode);
   $('palette').style.display = buildMode ? 'flex' : 'none';
@@ -3678,6 +4430,7 @@ $('buildToggle').addEventListener('click', function () {
 });
 $('undoBuild').addEventListener('click', undoBuild);
 $('removeMode').addEventListener('click', function () {
+  if (!editGuard()) return;
   removeMode = !removeMode;
   this.classList.toggle('on', removeMode);
   ghost.visible = false;
@@ -3721,28 +4474,117 @@ $('replay').addEventListener('click', function () {
 $('export').addEventListener('click', exportSnapshot);
 $('away').addEventListener('click', startNight);
 $('alliance').addEventListener('click', function () {
+  if (!editGuard()) return;
   var box = $('allianceList');
-  if (box.style.display === 'block') { box.style.display = 'none'; this.textContent = '结成武林盟'; window.__alliance = 0; return; }
-  var names = census.filter(function (a) { return a.role === 'wanderer'; });
-  names.sort(function (a, b) { return hash32(currentSeed + ':' + a.id) - hash32(currentSeed + ':' + b.id); });
-  var picked = names.slice(0, 8);
-  box.textContent = picked.map(function (a) { return a.name; }).join('、');
-  box.style.display = 'block';
-  this.textContent = '散盟';
-  window.__alliance = picked.length;
-  window.__allianceNames = box.textContent;
+  if (box.style.display === 'block') { box.style.display = 'none'; this.textContent = '结成武林盟'; return; }
+  var candidates = agents.filter(function (a) {
+    return !a.dead && !a.downed && !a.flying && a.faction === 'folk' && a.role !== 'wanderer' && a.role !== 'guard' && !onScreen(a.x, a.z);
+  });
+  var picked = candidates.slice(0, 3);
+  picked.forEach(function (a) { a.faction = 'wuxia'; a.flashUntil = perfNow() + 0.5; a.flashBase = mode === 'clay' ? pal().agent : roleOf(a.role).color; });
+  box.textContent = picked.length ? '入盟 ' + picked.length + ' 人：' + picked.map(function (a) { return a.name; }).join('、') + '（职业不变）' : '镜头外没有可入盟的百姓';
+  box.style.display = 'block'; this.textContent = '收起名单';
+  window.__alliance = picked.length; window.__allianceNames = box.textContent;
 });
 var WALLS = ['c-wall-n','c-wall-w','c-wall-s1','c-wall-s2','c-wall-e1','c-wall-e2'];
+var SKILLS = {
+  '地震': { quake: true, kills: 'all' },
+  '陨石': { target: 'c-pagoda', radius: 6, kills: 'all' },
+  '落雷': { targetKind: 'highest', radius: 4, kills: 'all', flash: true },
+  '雷火': { targetKind: 'highest', radius: 2, kills: 'all', flash: true },
+  '市集起火': { targetKind: 'stall', radius: 4.5, kills: 'all' },
+  '流星碎石': { targetKind: 'house', radius: 5, kills: 'all', multi: 3 },
+  '火攻': { target: 'c-gate', radius: 4, kills: 'all' },
+  '地裂': { target: 'c-gate', radius: 5, kills: 'down', ring: false },
+  '投石': { targetKind: 'wall', radius: 0, kills: 'none', ring: true },
+  '挖墙': { targetKind: 'wall', radius: 0, kills: 'none', ring: false },
+  '大火': { target: 'c-forge', radius: 5, kills: 'all', wave: 7 },
+  '灶火': { target: 'c-forge', radius: 3, kills: 'all' },
+  '野火': { targetKind: 'field', radius: 4, kills: 'all', multi: 3 },
+  '火药': { targetKind: 'tent', radius: 4, kills: 'all', multi: 3 },
+  '冰雹': { targetKind: 'stall', radius: 3, kills: 'all', multi: 6, topple: false },
+  '龙卷风': { targetKind: 'house', radius: 3, kills: 'down', multi: 4, topple: false, ring: true }
+};
+function skillTargets(spec) {
+  if (spec.target) return world.plans.filter(function (p) { return p.id === spec.target; }).slice(0, 1);
+  if (spec.targetKind === 'highest') {
+    var h = world.plans.reduce(function (m, p) { return (!m || p.h > m.h) ? p : m; }, null);
+    return h ? [h] : [];
+  }
+  return spec.targetKind ? world.plans.filter(function (p) { return p.kind === spec.targetKind && !toppled[p.id]; }).slice(0, spec.multi || 1) : [];
+}
+function affectNear(cx, cz, radius, mode, kind) {
+  var n = 0;
+  /* 免疫只针对上轮同名技能（D2 耦合点）：统一解析 v1/v2 threat 串的 focus，异名技能不免疫。
+     focus+shelter_routine 的自我削弱是设计意图：适应=保护百姓免受重复技能（Lead 已确认）。
+     避难所不可被任何技能瞄准或摧毁（SKILLS 里没有 shelter 目标），不存在倒塌态，不查 toppled。 */
+  var focus = directorFocusOf(world.layoutThreat);
+  var shelter = focus !== '' && focus === kind ? world.plans.find(function (p) { return p.id === 'v-shelter'; }) : null;
+  for (var i = 0; i < agents.length; i++) {
+    var a = agents[i];
+    if (a.dead || (mode === 'down' && a.downed) || (mode === 'guard' && a.role !== 'guard')) continue;
+    if (radius > 0 && Math.hypot(a.x - cx, a.z - cz) > radius) continue;
+    if (shelter && Math.abs(a.x - shelter.x) < shelter.w / 2 && Math.abs(a.z - shelter.z) < shelter.d / 2) continue;
+    a.downed = true; a.flying = false;
+    if (mode !== 'down') { a.dead = true; a.deathCause = kind; }
+    n++;
+  }
+  return n;
+}
+$('castDisaster').addEventListener('click', function () {
+  if (!editGuard()) return;
+  var kind = $('disaster').value, spec = SKILLS[kind];
+  if (!spec) return;
+  var targets = skillTargets(spec), n = 0;
+  if ((spec.target || spec.targetKind) && !targets.length) {
+    $('director').textContent = '当前没有可作用的目标。';
+    window.__skill = { kind: kind, target: '', dead: 0 };
+    return;
+  }
+  if (spec.quake) quakeUntil = performance.now() + 1600;
+  if (spec.flash) quakeUntil = performance.now() + 400;
+  if (!targets.length) spawnSkillEffect(kind, 0, 0);
+  if (targets.length && !fpMode) {
+    cam.tx = cam.gx = targets[0].x; cam.tz = cam.gz = targets[0].z;
+    cam.radius = cam.gr = Math.min(cam.gr, 58);
+  }
+  targets.forEach(function (t) {
+    spawnSkillEffect(kind, t.x, t.z);
+    if (spec.topple !== false) {
+      toppled[t.id] = 1; window.__hopAt = performance.now(); buildParts();
+      if (t.kind === 'pagoda' && assetGroup) assetGroup.children.forEach(function (o) { if (o.userData.heroKey === 'pagoda') o.visible = false; });
+      markAssetParts(); applyFalls();
+    }
+    if (spec.ring !== false) spawnRing(t.x, t.z);
+    if (spec.kills !== 'none') n += affectNear(t.x, t.z, spec.radius, spec.kills, kind);
+  });
+  if (!targets.length && spec.kills !== 'none') n += affectNear(0, 0, spec.radius, spec.kills, kind);
+  window.__toppled = Object.keys(toppled).length;
+  window.__skill = { kind: kind, target: targets.map(function (t) { return t.id; }).join(','), dead: n };
+  if (spec.wave && targets.length) {
+    var cx = targets[0].x, cz = targets[0].z, sourceWorld = world;
+    setTimeout(function () {
+      if (world !== sourceWorld || worldEditBlocked()) return;
+      window.__skillWave = affectNear(cx, cz, spec.wave, spec.kills, kind); spawnRing(cx, cz);
+    }, 700);
+  }
+  noteThreat(kind);
+  renderCastPreview(); // issue147-adapt N2：施放后目标/倒塌态变化，刷新范围预览
+});
+$('disaster').addEventListener('change', renderCastPreview); // issue147-adapt N2：换技能即预览（dry-run）
 $('god').addEventListener('click', function () {
+  if (!editGuard()) return;
   var down = WALLS.every(function (id) { return toppled[id]; });
   WALLS.forEach(function (id) { if (down) delete toppled[id]; else toppled[id] = 1; });
   window.__hopAt = performance.now();
   this.textContent = down ? '破坏神' : '收回破坏';
+  $('topple').textContent = toppled['c-wall-n'] ? '扶起北墙' : '推倒北墙';
   buildParts();
   var n = 0; for (var k in toppled) n++;
   window.__toppled = n;
 });
 $('topple').addEventListener('click', function () {
+  if (!editGuard()) return;
   if (toppled['c-wall-n']) { delete toppled['c-wall-n']; this.textContent = '推倒北墙'; }
   else { toppled['c-wall-n'] = 1; this.textContent = '扶起北墙'; }
   buildParts();
@@ -3783,6 +4625,7 @@ window.addEventListener('resize', function () {
   try { q = new URLSearchParams(location.search).get('seed'); } catch (err) { q = null; }
   var v = parseInt(q, 10);
   initLabels();
+  initGuide(); initGuardMarks();
   rebuild(isFinite(v) ? v >>> 0 : 20260818);
   setMode('lego');
   requestAnimationFrame(frame);
