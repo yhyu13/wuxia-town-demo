@@ -63,7 +63,7 @@ footer{margin-top:34px;border-top:1px solid var(--line);padding-top:12px;font-si
     <div class="badges">
       <span class="b g">可运行原型</span><span class="b">无需登录</span><span class="b">桌面版 · 同一构建</span>
     </div>
-    <p class="note">说明书是 6 页草案，黄色标出还需团队补的真实信息；视频是 1 分 29 秒真实点击版。</p>
+    <p class="note">说明书是 6 页草案，黄色标出还需团队补的真实信息；视频是 2 分 59 秒真实点击版。</p>
   </section>
 
   <section class="card">
@@ -77,7 +77,7 @@ footer{margin-top:34px;border-top:1px solid var(--line);padding-top:12px;font-si
     <div class="row"><span class="k">上次运行</span><span class="v">2026-11-17T17:16:28+08:00</span></div>
     <div class="row"><span class="k">耗时</span><span class="v">6.9 s（含启动无头浏览器）</span></div>
     <div class="row"><span class="k">结果</span><span class="v"><span class="pill ok">成功</span> <span class="pill ok">模型回执</span></span></div>
-    <div class="row"><span class="k">超时 / 重试</span><span class="v">25 s / 1 次，仍失败写「未运行」</span></div>
+    <div class="row"><span class="k">超时 / 重试</span><span class="v">30 s / 1 次，仍失败写「未运行」</span></div>
     <div class="row"><span class="k">触发方式</span><span class="v">Windows 计划任务 WuxiaNightRun（每天 22:00）<br>Floatboat 可改为调 webhook</span></div>
     <pre>curl -X POST http://127.0.0.1:8787/hooks/night \
   -H "Content-Type: application/json" \
@@ -86,7 +86,7 @@ footer{margin-top:34px;border-top:1px solid var(--line);padding-top:12px;font-si
   </section>
 </div>
 
-<h3>3 · 回执卡：今晚谁在管它</h3>
+<h3>3 · 回执卡：昨夜发生了什么</h3>
 <section class="card">
   <p class="big">杨惊鸿留下了，绕到客栈走了半个时辰。时钟从 第1天 18:00 到 第2天 02:00。种子不变。</p>
   <div class="grid" style="grid-template-columns:1.1fr 1fr">
@@ -112,7 +112,7 @@ footer{margin-top:34px;border-top:1px solid var(--line);padding-top:12px;font-si
 <section class="card">
   <ol>
     <li><b>入口卡</b>：标题、一句话、三个按钮按上方原样填；公网 demo 用 <code>https://yhyu13.github.io/wuxia-town-demo/play/</code>。</li>
-    <li><b>定时流程</b>：每天 22:00 调 <code>POST http://127.0.0.1:8787/hooks/night</code>，body <code>{"seed":20260818}</code>；超时 25 s，失败重试 1 次。</li>
+    <li><b>定时流程</b>：每天 22:00 调 <code>POST http://127.0.0.1:8787/hooks/night</code>，body <code>{"seed":20260818}</code>；超时 30 s，失败重试 1 次。</li>
     <li><b>回执卡</b>：按返回 JSON 映射 日期/谁/去哪/时钟/模型/tokens/降级/可撤回/指纹；截图取返回里的 <code>screenshot</code> 路径。</li>
   </ol>
   <p class="note">本地服务：<code>python p/reports/workbench/server/run-night.py --serve</code>（默认 127.0.0.1:8787）。工作台跑在你们电脑上，关机断网会停——这一句要写进说明书「运行条件」。</p>
