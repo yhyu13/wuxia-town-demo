@@ -36,11 +36,11 @@ footer{margin-top:36px;border-top:1px solid var(--line);padding-top:12px;font-si
 <div class="wrap">
 <header>
 <h1>武侠小镇：你不在的八小时</h1>
-<p class="meta">方向：等 ｜ 形态：产品提案 ｜ 团队：<span class="todo">待补：队伍编号 / 负责人 / 成员</span><br>
-Floatboat 最小工作台：<span class="todo">待补：私密分享链接</span> ｜ 演示视频：<a href="https://yhyu13.github.io/wuxia-town-demo/watch/">3 分钟演示</a> ｜ 可运行原型：<a href="https://yhyu13.github.io/wuxia-town-demo/play/">/play/</a> ｜ 工作台回执：<a href="https://yhyu13.github.io/wuxia-town-demo/reports/workbench/">/reports/workbench/</a></p>
+<p class="meta">方向：等 ｜ 形态：产品提案 ｜ 团队：俞航（共 1 人）｜ 队伍编号：T38（SimCity计划）<br>
+免登录单文件报告：<a href="https://yhyu13.github.io/wuxia-town-demo/reports/workbench-report/">/reports/workbench-report/</a> ｜ 工作台回执（备选）：<a href="https://yhyu13.github.io/wuxia-town-demo/reports/workbench/">/reports/workbench/</a> ｜ 演示视频：<a href="https://yhyu13.github.io/wuxia-town-demo/watch/">2:58.5（178.5 s）</a> ｜ 可运行原型：<a href="https://yhyu13.github.io/wuxia-town-demo/play/">/play/</a></p>
 </header>
 
-<div class="note no-print">这是一份可公开阅读的说明书草案（v0.1，2026-11-17）。黄色标记是必须由团队补的真实信息，不能用推测代替；补齐后条目会变绿。页面按 6 页排版，可直接打印。</div>
+<div class="note no-print">这是一份可公开阅读的说明书（收口 2026-11-20）。黄色标记是必须由团队补的真实信息，不能用推测代替；补齐后条目会变绿。页面按 6 页排版，可直接打印。</div>
 
 <h2>1. 两道门（300 字以内）</h2>
 <p><b>拿掉 AI，它还剩什么：</b>剩下一座能自己运转的乐高沙盘——240 人按作息走动、建造与拆除可撤销、百姓能拖、守卫会倒、一天结束按守卫算胜负。大约占 65%。但「这一夜为什么发生、谁为什么绕到客栈」没有来源，夜间主线不成立：剩下的是一台会转的机器，不是一个会过夜的世界。</p>
@@ -117,9 +117,10 @@ Floatboat 最小工作台：<span class="todo">待补：私密分享链接</span
 
 <h2>7. 增量边界</h2>
 <ul>
-<li>11 月 3 日之前已经有的：无。仓库 2026-11-11 建立。</li>
-<li>比赛期间新做的：全部——沙盘、夜间候选、阵营、拖动、胜负、客栈资产、工作台与回执。</li>
-<li>怎么证明：仓库提交记录与 PR #1–#145；<a href="https://yhyu13.github.io/wuxia-town-demo/reports/2026-11-17-closeout.html">收口报告</a> 里有按天的提交与证据。</li>
+<li>11 月 3 日之前已经有的：无。仓库 2026-11-11 建立，之前没有可运行版本。</li>
+<li>这次提交的版本：基线 832c6d1 + 收口重做 99d65b6（PR #148，merge e109729）+ 玩法闭环 048453e（#150）+ 自适应世界 6304a19（#151：导演契约 v2 + modifiers 确定性新城）+ 守卫徽章每帧贴合 8d62db6（#152）+ 失败数解析硬化 9c52c57（#154）+ 交付对齐文档 2759f3e（#158，当前 main HEAD）+ 工作台回执。公网 /play/ 已重建为 2759f3e 树（版本戳 v147-16skills-auto-rebel，11-20 复核 HTTP 200）。</li>
+<li>比赛期间新做的：全部——沙盘、夜间候选、划走/留下、阵营、镜头外拉人、外来武侠、拖动、对峙、胜负、客栈模型、工作台与回执；16 破坏技能与逐项特效、夜间自动反叛（单波最多倒初始守卫 25%）、善恶双胜利与失败结局、默认 1 分钟一天、局终自动导演换世界（五类 modifiers：守卫增援/城墙加固/百姓夜宿避难所/市集迁址/巡逻加密）、守卫徽章每帧贴合（源：合并链 #150–#152）。</li>
+<li>怎么证明：仓库提交记录与 PR #1–#158（收口 PR #148 含两轮独立评审与闸门日志索引；五次合并均走 R1 冲突检查与独立裁决）；<a href="https://yhyu13.github.io/wuxia-town-demo/reports/2026-11-17-closeout.html">收口报告</a> 里有按天的提交与证据。</li>
 </ul>
 
 <h2>8. 开发声明</h2>
@@ -143,6 +144,6 @@ Floatboat 最小工作台：<span class="todo">待补：私密分享链接</span
 </ol>
 </div>
 
-<footer>草案 v0.1 · 2026-11-17 · 依据赛事《作品提交指南》v1.2 与《说明书模板》v1.2（模板二）· 本页可离线打开，图片来自公网回执。</footer>
+<footer>收口 2026-11-20 · 依据赛事《作品提交指南》v1.2 与《说明书模板》v1.2（模板二）· 本页可离线打开，图片来自公网回执。</footer>
 </div>
 </body></html>
